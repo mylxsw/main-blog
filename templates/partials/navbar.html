@@ -1,0 +1,77 @@
+<header class="navbar {{#if navigation.isSticky}}navbar-sticky{{else}}navbar-static{{/if}}">
+    <div class="navbar-container">
+        <div class="navbar-brand">
+            <a href="{{navigation.homeUrl}}" class="navbar-logo">{{site.title}}</a>
+        </div>
+        <div class="navbar-right">
+            <nav class="navbar-menu" id="navbar-menu">
+                <div class="navbar-mobile-panel">
+                    <div class="navbar-mobile-actions">
+                        <button type="button" class="nav-icon-button" data-filter-open aria-haspopup="dialog" aria-expanded="false" aria-controls="post-filter-modal" aria-label="{{navigation.filterLabel}}">
+                            <span class="sr-only">{{navigation.filterLabel}}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.323 13.383a5.5 5.5 0 1 1 1.06-1.06l2.897 2.897a.75.75 0 1 1-1.06 1.06l-2.897-2.897Zm.677-4.383a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+                        </button>
+                        <a href="{{assets.rss}}" class="nav-icon-button nav-mobile-rss" target="_blank" rel="noopener noreferrer" aria-label="{{t 'nav.rss'}}">
+                            <span aria-hidden="true">RSS</span>
+                        </a>
+                        <button type="button" class="theme-toggle nav-mobile-theme" data-theme-toggle aria-label="{{t 'theme.toggleDark'}}" data-theme-label-dark="{{t 'theme.toggleDark'}}" data-theme-label-light="{{t 'theme.toggleLight'}}">
+                            <span class="theme-toggle-icon" data-theme-icon>🌙</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="navbar-nav">
+                    <a href="{{navigation.homeUrl}}" class="nav-item {{#if (eq navigation.activePage 'home')}}active{{/if}}">
+                        <span class="nav-text">{{t 'nav.home'}}</span>
+                    </a>
+                    {{#if navigation.categories.hasCategories}}
+                        {{#each navigation.categories.primary}}
+                            <a href="{{url}}" class="nav-item {{#if (eq slug ../navigation.activeCategorySlug)}}active{{/if}}">
+                                <span class="nav-text">{{name}}</span>
+                            </a>
+                        {{/each}}
+                        {{#if navigation.categories.more.length}}
+                            <div class="nav-item nav-dropdown">
+                                <button type="button" class="nav-dropdown-toggle" aria-expanded="false">
+                                    <span class="nav-text">{{navigation.categories.moreLabel}}</span>
+                                    <span class="nav-dropdown-icon">▾</span>
+                                </button>
+                                <div class="nav-dropdown-menu" hidden>
+                                    {{#each navigation.categories.more}}
+                                        <a href="{{url}}" class="nav-dropdown-item {{#if (eq slug ../../navigation.activeCategorySlug)}}active{{/if}}">{{name}}</a>
+                                    {{/each}}
+                                </div>
+                            </div>
+                        {{/if}}
+                    {{/if}}
+                    <a href="{{navigation.aboutUrl}}" class="nav-item {{#if (eq navigation.activePage 'about')}}active{{/if}}">
+                        <span class="nav-text">{{t 'nav.about'}}</span>
+                    </a>
+                    <a href="{{assets.rss}}" class="nav-item nav-item-special" target="_blank" rel="noopener noreferrer">
+                        <span class="nav-text">{{t 'nav.rss'}}</span>
+                    </a>
+                </div>
+            </nav>
+            {{#if navigation.hasLanguageSwitcher}}
+            <div class="navbar-languages" aria-label="{{t 'nav.language'}}">
+                {{#each navigation.languages}}
+                    <a href="{{url}}" class="nav-item nav-item-language {{#if active}}active{{/if}}">{{label}}</a>
+                {{/each}}
+            </div>
+            {{/if}}
+            <div class="navbar-actions">
+                <button type="button" class="nav-icon-button" id="post-filter-open" data-filter-open aria-haspopup="dialog" aria-expanded="false" aria-controls="post-filter-modal" aria-label="{{navigation.filterLabel}}">
+                    <span class="sr-only">{{navigation.filterLabel}}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.323 13.383a5.5 5.5 0 1 1 1.06-1.06l2.897 2.897a.75.75 0 1 1-1.06 1.06l-2.897-2.897Zm.677-4.383a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+                </button>
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="{{t 'theme.toggleDark'}}" data-theme-label-dark="{{t 'theme.toggleDark'}}" data-theme-label-light="{{t 'theme.toggleLight'}}">
+                    <span class="theme-toggle-icon" data-theme-icon>🌙</span>
+                </button>
+            </div>
+        </div>
+        <button class="navbar-toggle" id="navbar-toggle" aria-label="{{navigation.toggleMenuLabel}}">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</header>

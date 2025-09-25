@@ -1,0 +1,529 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const translations = window.__I18N__ || {};
+        const assets = window.__ASSETS__ || {};
+        const SEARCH_INDEX_URL = assets.search || '/search.json';
+        const getTranslation = (source, path) => {
+            return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined), source);
+        };
+        const t = (key, fallback) => {
+            const value = getTranslation(translations, key);
+            return typeof value === 'string' ? value : fallback;
+        };
+        const copyLabel = t('buttons.copy', '复制');
+        const copySuccessLabel = t('buttons.copySuccess', '已复制');
+        const copyCodeLabel = t('buttons.copyCode', '复制代码');
+        const themeLabelDark = t('theme.toggleDark', '切换为暗色模式');
+        const themeLabelLight = t('theme.toggleLight', '切换为亮色模式');
+        const searchErrorMessage = t('messages.searchError', '搜索索引加载失败，请稍后再试。');
+        const searchEmptyMessage = t('messages.searchNoResults', '没有找到匹配的文章。');
+
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', function() {
+                if (this.dataset.fallbackApplied) return;
+                this.dataset.fallbackApplied = '1';
+                this.src = '/assets/placeholder.png';
+                this.classList.add('placeholder');
+            }, { once: true });
+        });
+
+        document.querySelectorAll('.copy-code-btn').forEach(btn => {
+            btn.textContent = copyLabel;
+            btn.dataset.originalLabel = copyLabel;
+            btn.setAttribute('aria-label', copyCodeLabel);
+        });
+
+        const navbarToggle = document.getElementById('navbar-toggle');
+        const navbarMenu = document.getElementById('navbar-menu');
+        const mobileNavQuery = window.matchMedia('(max-width: 768px)');
+        const addMediaQueryListener = (mql, handler) => {
+            if (typeof mql.addEventListener === 'function') {
+                mql.addEventListener('change', handler);
+            } else if (typeof mql.addListener === 'function') {
+                mql.addListener(handler);
+            }
+        };
+
+        if (navbarToggle && navbarMenu) {
+            navbarToggle.addEventListener('click', function() {
+                navbarToggle.classList.toggle('open');
+                navbarMenu.classList.toggle('open');
+                document.body.classList.toggle('nav-open', navbarMenu.classList.contains('open'));
+            });
+
+            const navLinks = navbarMenu.querySelectorAll('a.nav-item, .nav-dropdown-item');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (!navbarMenu.classList.contains('open')) return;
+                    navbarToggle.classList.remove('open');
+                    navbarMenu.classList.remove('open');
+                    document.body.classList.remove('nav-open');
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!navbarToggle.contains(e.target) && !navbarMenu.contains(e.target)) {
+                    navbarToggle.classList.remove('open');
+                    navbarMenu.classList.remove('open');
+                    document.body.classList.remove('nav-open');
+                }
+            });
+        }
+
+        const dropdowns = Array.from(document.querySelectorAll('.nav-dropdown'));
+        const dropdownControllers = [];
+
+        dropdowns.forEach(dropdown => {
+            const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+            const menu = dropdown.querySelector('.nav-dropdown-menu');
+            if (!toggle || !menu) return;
+
+            const clearTransition = () => {
+                if (menu._dropdownTransitionHandler) {
+                    menu.removeEventListener('transitionend', menu._dropdownTransitionHandler);
+                    menu._dropdownTransitionHandler = null;
+                }
+            };
+
+            const setDropdownState = (open, immediate = false) => {
+                const alreadyOpen = toggle.getAttribute('aria-expanded') === 'true';
+                if (open === alreadyOpen && !immediate) return;
+
+                clearTransition();
+                toggle.setAttribute('aria-expanded', String(open));
+
+                if (!mobileNavQuery.matches || immediate) {
+                    menu.hidden = !open;
+                    menu.classList.toggle('is-open', open);
+                    menu.style.maxHeight = '';
+                    return;
+                }
+
+                if (open) {
+                    menu.hidden = false;
+                    menu.classList.add('is-open');
+                    menu.style.maxHeight = '0px';
+                    requestAnimationFrame(() => {
+                        menu.style.maxHeight = `${menu.scrollHeight}px`;
+                    });
+                    const handleOpenEnd = (event) => {
+                        if (event.propertyName !== 'max-height') return;
+                        menu.style.maxHeight = 'none';
+                        menu.removeEventListener('transitionend', handleOpenEnd);
+                        menu._dropdownTransitionHandler = null;
+                    };
+                    menu._dropdownTransitionHandler = handleOpenEnd;
+                    menu.addEventListener('transitionend', handleOpenEnd);
+                } else {
+                    if (menu.hidden && !menu.classList.contains('is-open')) {
+                        menu.style.maxHeight = '';
+                        return;
+                    }
+                    const height = menu.scrollHeight;
+                    menu.style.maxHeight = `${height}px`;
+                    requestAnimationFrame(() => {
+                        menu.classList.remove('is-open');
+                        menu.style.maxHeight = '0px';
+                    });
+                    const handleCloseEnd = (event) => {
+                        if (event.propertyName !== 'max-height') return;
+                        menu.hidden = true;
+                        menu.style.maxHeight = '';
+                        menu.removeEventListener('transitionend', handleCloseEnd);
+                        menu._dropdownTransitionHandler = null;
+                    };
+                    menu._dropdownTransitionHandler = handleCloseEnd;
+                    menu.addEventListener('transitionend', handleCloseEnd);
+                }
+            };
+
+            toggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                setDropdownState(!expanded);
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!dropdown.contains(event.target)) {
+                    setDropdownState(false);
+                }
+            });
+
+            dropdownControllers.push({ setState: setDropdownState });
+        });
+
+        addMediaQueryListener(mobileNavQuery, () => {
+            dropdownControllers.forEach(({ setState }) => setState(false, true));
+        });
+
+        document.body.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.copy-code-btn');
+            if (!btn) return;
+            const container = btn.closest('.code-block');
+            if (!container) return;
+            const codeEl = container.querySelector('pre code');
+            if (!codeEl) return;
+            const text = codeEl.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+                const original = btn.dataset.originalLabel || copyLabel;
+                btn.textContent = copySuccessLabel;
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 1200);
+            } catch (err) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try { document.execCommand('copy'); } catch {}
+                document.body.removeChild(textarea);
+                const original = btn.dataset.originalLabel || copyLabel;
+                btn.textContent = copySuccessLabel;
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = original;
+                    btn.classList.remove('copied');
+                }, 1200);
+            }
+        });
+
+        const themeToggleButtons = document.querySelectorAll('[data-theme-toggle]');
+        const highlightThemeLinks = document.querySelectorAll('link[data-theme-style]');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        themeToggleButtons.forEach(button => {
+            button.dataset.themeLabelDark = button.getAttribute('data-theme-label-dark') || themeLabelDark;
+            button.dataset.themeLabelLight = button.getAttribute('data-theme-label-light') || themeLabelLight;
+        });
+
+        const updateHighlightThemes = (isDark) => {
+            highlightThemeLinks.forEach(link => {
+                const themeStyle = link.getAttribute('data-theme-style');
+                if (!themeStyle) return;
+                if (themeStyle === 'dark') {
+                    link.disabled = !isDark;
+                } else {
+                    link.disabled = isDark;
+                }
+            });
+        };
+
+        const applyTheme = (theme, persist = true) => {
+            const isDark = theme === 'dark';
+            document.body.classList.toggle('theme-dark', isDark);
+            document.body.classList.toggle('theme-light', !isDark);
+            document.body.setAttribute('data-theme', theme);
+            themeToggleButtons.forEach(button => {
+                const icon = button.querySelector('[data-theme-icon]');
+                if (icon) {
+                    icon.textContent = isDark ? '🌞' : '🌙';
+                }
+                const dark = button.dataset.themeLabelDark || themeLabelDark;
+                const light = button.dataset.themeLabelLight || themeLabelLight;
+                button.setAttribute('aria-label', isDark ? light : dark);
+            });
+            updateHighlightThemes(isDark);
+            if (persist) {
+                localStorage.setItem('theme', theme);
+            }
+        };
+
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            applyTheme(storedTheme, false);
+        } else {
+            applyTheme(prefersDark.matches ? 'dark' : 'light', false);
+        }
+
+        themeToggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const nextTheme = document.body.classList.contains('theme-dark') ? 'light' : 'dark';
+                applyTheme(nextTheme, true);
+            });
+        });
+
+        prefersDark.addEventListener('change', (event) => {
+            if (!localStorage.getItem('theme')) {
+                applyTheme(event.matches ? 'dark' : 'light', false);
+            }
+        });
+
+        const searchInput = document.getElementById('post-search');
+        const tagFilter = document.getElementById('tag-filter');
+        const searchResultsContainer = document.getElementById('search-results');
+        const modalResultsContainer = document.querySelector('[data-modal-results]');
+        const defaultPostsContainer = document.querySelector('[data-default-posts]');
+        const paginationEl = document.querySelector('.pagination');
+        const filterOpenButtons = document.querySelectorAll('[data-filter-open]');
+        const filterModal = document.getElementById('post-filter-modal');
+        const filterDialog = filterModal ? filterModal.querySelector('.filter-modal-dialog') : null;
+        const modalDismissElements = filterModal ? filterModal.querySelectorAll('[data-filter-dismiss]') : [];
+        const resultsContainer = searchResultsContainer || modalResultsContainer;
+        const useModalResults = !searchResultsContainer && !!modalResultsContainer;
+        let lastFocusedElement = null;
+        let modalVisible = false;
+
+        const activeTags = new Set();
+        let searchTerm = '';
+        let searchIndex = [];
+
+        const escapeHtml = (value) => {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        const updateFilterButtonExpanded = (expanded) => {
+            filterOpenButtons.forEach(button => {
+                button.setAttribute('aria-expanded', String(expanded));
+                button.classList.toggle('is-open', expanded);
+            });
+        };
+
+        const updateFilterButtonActive = (active) => {
+            filterOpenButtons.forEach(button => {
+                button.classList.toggle('active', active);
+            });
+        };
+
+        const ensureSearchIndex = async () => {
+            if (searchIndex.length) return;
+            try {
+                const response = await fetch(SEARCH_INDEX_URL);
+                if (!response.ok) throw new Error('Failed to load search index');
+                const payload = await response.json();
+                searchIndex = Array.isArray(payload.posts) ? payload.posts : [];
+            } catch (err) {
+                console.error(err);
+                if (resultsContainer) {
+                    resultsContainer.hidden = false;
+                    resultsContainer.innerHTML = `<div class="empty-state">${escapeHtml(searchErrorMessage)}</div>`;
+                }
+            }
+        };
+
+        const openFilterModal = async () => {
+            if (!filterModal || modalVisible) return;
+            modalVisible = true;
+            lastFocusedElement = document.activeElement;
+            filterModal.hidden = false;
+            requestAnimationFrame(() => filterModal.classList.add('open'));
+            document.body.classList.add('modal-open');
+            updateFilterButtonExpanded(true);
+            await ensureSearchIndex();
+            if (searchInput) {
+                requestAnimationFrame(() => searchInput.focus());
+            }
+        };
+
+        const updateTagButtonStates = () => {
+            if (!tagFilter) return;
+            const buttons = tagFilter.querySelectorAll('[data-tag]');
+            buttons.forEach(button => {
+                const tag = button.dataset.tag;
+                if (!tag) {
+                    if (activeTags.size === 0) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                    return;
+                }
+                if (activeTags.has(tag)) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        };
+
+        const resetFilters = ({ clearInputs = true } = {}) => {
+            activeTags.clear();
+            searchTerm = '';
+            if (clearInputs && searchInput) {
+                searchInput.value = '';
+            }
+            updateTagButtonStates();
+        };
+
+        const closeFilterModal = () => {
+            if (!filterModal || !modalVisible) return;
+            modalVisible = false;
+            filterModal.classList.remove('open');
+            document.body.classList.remove('modal-open');
+            updateFilterButtonExpanded(false);
+            setTimeout(() => {
+                if (!modalVisible) {
+                    filterModal.hidden = true;
+                }
+            }, 160);
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                requestAnimationFrame(() => lastFocusedElement.focus());
+            }
+            if (useModalResults) {
+                resetFilters();
+                renderResults();
+            }
+        };
+
+        if (filterOpenButtons.length && filterModal) {
+            filterOpenButtons.forEach(button => {
+                button.addEventListener('click', async () => {
+                    if (modalVisible) {
+                        closeFilterModal();
+                    } else {
+                        await openFilterModal();
+                    }
+                });
+            });
+        }
+
+        if (filterModal) {
+            filterModal.addEventListener('click', (event) => {
+                if (event.target === filterModal) {
+                    closeFilterModal();
+                }
+            });
+        }
+
+        if (filterDialog) {
+            filterDialog.addEventListener('click', (event) => event.stopPropagation());
+        }
+
+        modalDismissElements.forEach(element => {
+            element.addEventListener('click', () => closeFilterModal());
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalVisible) {
+                closeFilterModal();
+            }
+        });
+
+        const ensureFiltersOpen = () => {
+            if (useModalResults) {
+                openFilterModal().catch(() => {});
+            }
+        };
+
+        const renderResults = () => {
+            const hasActiveFilters = searchTerm.length > 0 || activeTags.size > 0;
+            if (!hasActiveFilters) {
+                updateFilterButtonActive(false);
+                if (resultsContainer) {
+                    resultsContainer.hidden = true;
+                    resultsContainer.innerHTML = '';
+                }
+                if (defaultPostsContainer) defaultPostsContainer.hidden = false;
+                if (paginationEl) paginationEl.hidden = false;
+                return;
+            }
+
+            updateFilterButtonActive(true);
+            if (useModalResults) {
+                ensureFiltersOpen();
+            }
+
+            const normalizedTerm = searchTerm.toLowerCase();
+            const filtered = searchIndex.filter(item => {
+                const matchesTerm = !normalizedTerm || (
+                    item.title.toLowerCase().includes(normalizedTerm) ||
+                    item.excerpt.toLowerCase().includes(normalizedTerm) ||
+                    item.content.toLowerCase().includes(normalizedTerm)
+                );
+                const matchesTags = activeTags.size === 0 || item.tags.some(tag => activeTags.has(tag));
+                return matchesTerm && matchesTags;
+            });
+
+            if (defaultPostsContainer) defaultPostsContainer.hidden = true;
+            if (paginationEl) paginationEl.hidden = true;
+
+            if (!resultsContainer) return;
+
+            resultsContainer.hidden = false;
+
+            if (!filtered.length) {
+                resultsContainer.innerHTML = `<div class="empty-state">${escapeHtml(searchEmptyMessage)}</div>`;
+                return;
+            }
+
+            const cards = filtered.map(item => {
+                const chips = [];
+                if (item.category && item.category.url) {
+                    chips.push(`<a class="post-chip post-chip-category" href="${escapeHtml(item.category.url)}">${escapeHtml(item.category.name)}</a>`);
+                }
+                if (item.tagLinks && item.tagLinks.length) {
+                    item.tagLinks.forEach(tag => {
+                        chips.push(`<a class="post-chip" href="${escapeHtml(tag.url)}">${escapeHtml(tag.name)}</a>`);
+                    });
+                }
+                const chipsHtml = chips.length ? `<div class=\"post-chips\">${chips.join('')}</div>` : '';
+                const coverHtml = item.coverImage
+                    ? `<div class=\"overflow-hidden\"><img src=\"${escapeHtml(item.coverImage)}\" alt=\"${escapeHtml(item.title)}\" class=\"post-image\" loading=\"lazy\" onerror=\"this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');\"></div>`
+                    : '';
+                return `
+                    <article class="post-card">
+                        ${coverHtml}
+                        <div class="post-content-area">
+                            <h2><a href="${escapeHtml(item.url)}" class="post-title">${escapeHtml(item.title)}</a></h2>
+                            <div class="post-meta">
+                                <div class="post-date">
+                                    <time datetime="${escapeHtml(item.dateISO)}">${escapeHtml(item.dateFormatted)}</time>
+                                </div>
+                                ${chipsHtml}
+                            </div>
+                            <div class="post-excerpt">${escapeHtml(item.excerpt)}</div>
+                        </div>
+                    </article>`;
+            }).join('');
+
+            resultsContainer.innerHTML = cards;
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', async (event) => {
+                searchTerm = event.target.value.trim();
+                await ensureSearchIndex();
+                renderResults();
+            });
+
+            searchInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    event.stopPropagation();
+                    closeFilterModal();
+                }
+            });
+        }
+
+        if (tagFilter) {
+            tagFilter.addEventListener('click', async (event) => {
+                const button = event.target.closest('[data-tag]');
+                if (!button) return;
+                const tag = button.dataset.tag;
+
+                await ensureSearchIndex();
+
+                if (!tag) {
+                    activeTags.clear();
+                } else if (activeTags.has(tag)) {
+                    activeTags.delete(tag);
+                } else {
+                    activeTags.add(tag);
+                }
+
+                updateTagButtonStates();
+                renderResults();
+            });
+        }
+
+    });
+</script>
+{{#if analytics.bodyEnd}}
+{{{analytics.bodyEnd}}}
+{{/if}}

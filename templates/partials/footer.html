@@ -1,0 +1,45 @@
+<footer class="footer">
+    <div class="footer-inner {{#unless footer.social.length}}{{#unless footer.external.length}}footer-centered{{/unless}}{{/unless}}">
+        {{#if footer.external.length}}
+        <nav class="footer-links-row" aria-label="External links">
+            {{#each footer.external}}
+            <a href="{{url}}" class="footer-link-chip" target="_blank" rel="noopener noreferrer">
+                <span class="footer-link-label">{{label}}</span>
+                {{#if description}}
+                <span class="footer-link-desc">{{description}}</span>
+                {{/if}}
+            </a>
+            {{/each}}
+        </nav>
+        {{/if}}
+        {{#if footer.social.length}}
+        <div class="footer-social" aria-label="Social links">
+            {{#each footer.social}}
+            <a href="{{url}}" class="footer-social-link" target="_blank" rel="noopener noreferrer" aria-label="{{#if label}}{{label}}{{else}}{{url}}{{/if}}">
+                {{#if icon}}
+                <span class="footer-social-icon">{{{icon}}}</span>
+                {{else}}
+                <span class="footer-social-fallback">{{fallback}}</span>
+                {{/if}}
+                {{#if label}}<span class="sr-only">{{label}}</span>{{/if}}
+            </a>
+            {{/each}}
+        </div>
+        {{/if}}
+        <div class="footer-meta">
+            <p class="footer-copy">&copy; {{site.copyrightYear}} {{site.title}}. All rights reserved.</p>
+            {{#if footer.icp.text}}
+            <p class="footer-icp">
+                {{#if footer.icp.link}}
+                <a href="{{footer.icp.link}}" target="_blank" rel="noopener noreferrer">{{footer.icp.text}}</a>
+                {{else}}
+                {{footer.icp.text}}
+                {{/if}}
+            </p>
+            {{/if}}
+            {{#if footer.note}}
+            <p class="footer-note">{{footer.note}}</p>
+            {{/if}}
+        </div>
+    </div>
+</footer>

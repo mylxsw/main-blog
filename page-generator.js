@@ -48,6 +48,7 @@ class PageGenerator {
         this.parser = new MarkdownParser();
         this.publicDir = path.join(__dirname, 'public');
         this.templatesDir = path.join(__dirname, 'templates');
+        this.partialsDir = path.join(this.templatesDir, 'partials');
         this.pagesDir = path.join(__dirname, 'pages');
         this.systemPagesDir = path.join(this.pagesDir, 'system');
         this.config = config;
@@ -57,6 +58,39 @@ class PageGenerator {
         this.languageMap = new Map(this.languages.map(lang => [lang.code, lang]));
         this.defaultLanguage = this.languages.find(lang => lang.isDefault) || this.languages[0];
         this.themeContext = this.createThemeContext();
+        this.loadPartials();
+    }
+
+    loadPartials() {
+        if (!this.partialsDir || !fs.existsSync(this.partialsDir)) {
+            return;
+        }
+
+        const registerFromDirectory = (directory, prefix = '') => {
+            const entries = fs.readdirSync(directory, { withFileTypes: true });
+            entries.forEach(entry => {
+                const entryPath = path.join(directory, entry.name);
+                if (entry.isDirectory()) {
+                    const nextPrefix = prefix ? `${prefix}/${entry.name}` : entry.name;
+                    registerFromDirectory(entryPath, nextPrefix);
+                    return;
+                }
+
+                if (!entry.isFile()) return;
+                const ext = path.extname(entry.name).toLowerCase();
+                if (ext !== '.html' && ext !== '.hbs') return;
+
+                const partialName = (() => {
+                    const baseName = path.basename(entry.name, ext);
+                    return prefix ? `${prefix}/${baseName}` : baseName;
+                })();
+
+                const contents = fs.readFileSync(entryPath, 'utf-8');
+                handlebars.registerPartial(partialName, contents);
+            });
+        };
+
+        registerFromDirectory(this.partialsDir);
     }
 
     createThemeContext() {
