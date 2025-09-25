@@ -541,6 +541,36 @@
                 }
             };
 
+            function updateTagButtonStates() {
+                if (!tagFilter) return;
+                const buttons = tagFilter.querySelectorAll('[data-tag]');
+                buttons.forEach(button => {
+                    const tag = button.dataset.tag;
+                    if (!tag) {
+                        if (activeTags.size === 0) {
+                            button.classList.add('active');
+                        } else {
+                            button.classList.remove('active');
+                        }
+                        return;
+                    }
+                    if (activeTags.has(tag)) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+
+            function resetFilters({ clearInputs = true } = {}) {
+                activeTags.clear();
+                searchTerm = '';
+                if (clearInputs && searchInput) {
+                    searchInput.value = '';
+                }
+                updateTagButtonStates();
+            }
+
             const closeFilterModal = () => {
                 if (!filterModal || !modalVisible) return;
                 modalVisible = false;
@@ -554,6 +584,10 @@
                 }, 160);
                 if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
                     requestAnimationFrame(() => lastFocusedElement.focus());
+                }
+                if (useModalResults) {
+                    resetFilters();
+                    renderResults();
                 }
             };
 
@@ -669,27 +703,6 @@
                 }).join('');
 
                 resultsContainer.innerHTML = cards;
-            };
-
-            const updateTagButtonStates = () => {
-                if (!tagFilter) return;
-                const buttons = tagFilter.querySelectorAll('[data-tag]');
-                buttons.forEach(button => {
-                    const tag = button.dataset.tag;
-                    if (!tag) {
-                        if (activeTags.size === 0) {
-                            button.classList.add('active');
-                        } else {
-                            button.classList.remove('active');
-                        }
-                        return;
-                    }
-                    if (activeTags.has(tag)) {
-                        button.classList.add('active');
-                    } else {
-                        button.classList.remove('active');
-                    }
-                });
             };
 
             if (searchInput) {

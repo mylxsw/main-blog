@@ -1,16 +1,16 @@
 module.exports = {
     site: {
-        title: '人人链向未来',
-        description: '不分职业背景，共同迈入去中心时代',
+        title: '程序猿成长计划',
+        description: '技术分享 & 读书，我们共同成长！',
         author: 'mylxsw',
-        url: 'http://localhost:8080', // RSS需要的站点URL
+        url: 'https://aicode.cc', // RSS需要的站点URL
         copyrightYear: new Date().getFullYear()
     },
     theme: {
         /**
          * 可选配色方案：modern（蓝紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）
          */
-        palette: 'forest'
+        palette: 'modern'
     },
     pagination: {
         pageSize: 10,
@@ -25,7 +25,7 @@ module.exports = {
              * 指定导航栏中直接展示的分类名称，按照数组顺序显示。
              * 未列出的分类会被归入“更多”下拉菜单中。
              */
-            topLevel: ['技术洞察', '产品观察'],
+            topLevel: ['技术分享', '读书'],
             /**
              * 自定义“更多”菜单的文案。
              */
@@ -70,7 +70,7 @@ module.exports = {
          * 备案信息设置。例如 { text: '京ICP备00000000号-1', link: 'https://beian.miit.gov.cn/' }
          */
         icp: {
-            text: '京ICP备00000000号-1',
+            text: '鲁ICP备14009006号-1',
             link: 'https://beian.miit.gov.cn/'
         },
         /**
@@ -118,7 +118,6 @@ module.exports = {
                 navigation: {
                     moreLabel: '更多',
                     defaultCategoryName: '其它',
-                    topLevel: ['技术洞察', '产品观察']
                 },
                 translations: {
                     nav: {
@@ -181,7 +180,6 @@ module.exports = {
                 navigation: {
                     moreLabel: 'More',
                     defaultCategoryName: 'Others',
-                    topLevel: ['Updates']
                 },
                 translations: {
                     nav: {

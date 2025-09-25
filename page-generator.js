@@ -700,7 +700,7 @@ class PageGenerator {
         }
 
         if (primary.length === 0 && more.length > 0) {
-            const fallback = more.splice(0, Math.min(3, more.length));
+            const fallback = more.splice(0, Math.min(2, more.length));
             primary.push(...fallback);
         }
 

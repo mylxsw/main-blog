@@ -650,6 +650,8 @@ main {
   display: flex;
   flex-direction: column;
   height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .filter-modal-header {
@@ -693,6 +695,8 @@ main {
   display: flex;
   flex-direction: column;
   gap: 1.35rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .filter-modal-results {
@@ -1830,6 +1834,27 @@ body.theme-dark .hljs-quote {
 .article-content table th:last-child,
 .article-content table td:last-child {
   border-right: none;
+}
+
+body.theme-dark .article-content table {
+  background: rgba(var(--color-navbar-dark-end-rgb), 0.78);
+  border: 1px solid rgba(var(--color-primary-strong-rgb), 0.32);
+  box-shadow: 0 22px 48px rgba(var(--color-navbar-dark-start-rgb), 0.55);
+}
+
+body.theme-dark .article-content table th,
+body.theme-dark .article-content table td {
+  border-color: rgba(var(--color-primary-strong-rgb), 0.28);
+  color: rgba(226, 232, 240, 0.9);
+}
+
+body.theme-dark .article-content table th {
+  background: linear-gradient(135deg, rgba(var(--color-navbar-dark-start-rgb), 0.85), rgba(var(--color-primary-rgb), 0.45));
+  color: #f8fafc;
+}
+
+body.theme-dark .article-content table tbody tr:nth-child(even) td {
+  background: rgba(15, 23, 42, 0.55);
 }
 
 /* 分页 */
