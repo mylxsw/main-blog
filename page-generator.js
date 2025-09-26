@@ -894,7 +894,8 @@ class PageGenerator {
             title: this.config.site.title,
             posts: pagePosts.map(post => this.buildListingItem(post, language)),
             pagination: this.buildPagination(page, totalPages, language),
-            hasPosts: pagePosts.length > 0
+            hasPosts: pagePosts.length > 0,
+            isHomeFirstPage: page === 1
         };
 
         const outputPath = page === 1

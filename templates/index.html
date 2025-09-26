@@ -1,7 +1,7 @@
 {{#> layout}}
     <main class="mx-0 px-4 sm:px-6 lg:px-8 py-4">
         <div id="default-posts" data-default-posts>
-            <div class="post-list">
+            <div class="post-list{{#if isHomeFirstPage}} post-list--home{{/if}}">
                 {{#if hasPosts}}
                     {{#each posts}}
                     <article class="post-card">

@@ -13,7 +13,7 @@ module.exports = {
         palette: 'modern'
     },
     pagination: {
-        pageSize: 10,
+        pageSize: 9,
     },
     navigation: {
         /**
