@@ -43,6 +43,7 @@
 html {
   width: 100%;
   overflow-x: hidden;
+  font-size: 15px;
 }
 
 body.theme-modern,
