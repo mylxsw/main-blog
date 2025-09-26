@@ -10,13 +10,13 @@
             const value = getTranslation(translations, key);
             return typeof value === 'string' ? value : fallback;
         };
-        const copyLabel = t('buttons.copy', '复制');
-        const copySuccessLabel = t('buttons.copySuccess', '已复制');
-        const copyCodeLabel = t('buttons.copyCode', '复制代码');
-        const themeLabelDark = t('theme.toggleDark', '切换为暗色模式');
-        const themeLabelLight = t('theme.toggleLight', '切换为亮色模式');
-        const searchErrorMessage = t('messages.searchError', '搜索索引加载失败，请稍后再试。');
-        const searchEmptyMessage = t('messages.searchNoResults', '没有找到匹配的文章。');
+        const copyLabel = t('buttons.copy', 'Copy');
+        const copySuccessLabel = t('buttons.copySuccess', 'Copied');
+        const copyCodeLabel = t('buttons.copyCode', 'Copy code');
+        const themeLabelDark = t('theme.toggleDark', 'Switch to dark mode');
+        const themeLabelLight = t('theme.toggleLight', 'Switch to light mode');
+        const searchErrorMessage = t('messages.searchError', 'Failed to load search index. Please try again later.');
+        const searchEmptyMessage = t('messages.searchNoResults', 'No matching articles found.');
 
         const PROGRESSIVE_SELECTORS = [
             '.post-image',
@@ -25,32 +25,60 @@
             '.recommendation-media img'
         ];
         const progressiveSelector = PROGRESSIVE_SELECTORS.join(', ');
+        const progressiveObserver = 'IntersectionObserver' in window
+            ? new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting && entry.intersectionRatio <= 0) return;
+                    const img = entry.target;
+                    observer.unobserve(img);
+                    img.dataset.progressiveVisible = '1';
+                    if (img.dataset.progressiveLoaded === '1') {
+                        requestAnimationFrame(() => img.classList.add('is-loaded'));
+                    }
+                });
+            }, { rootMargin: '160px 0px', threshold: 0 })
+            : null;
+
+        const markProgressiveLoaded = (img) => {
+            if (img.dataset.progressiveLoaded === '1') return;
+            img.dataset.progressiveLoaded = '1';
+            if (!progressiveObserver || img.dataset.progressiveVisible === '1') {
+                requestAnimationFrame(() => img.classList.add('is-loaded'));
+            }
+        };
+
         const applyProgressiveMedia = (scope = document) => {
             const nodes = scope.querySelectorAll(progressiveSelector);
             nodes.forEach(img => {
                 if (img.dataset.progressiveBound) return;
                 img.dataset.progressiveBound = '1';
                 img.classList.add('progressive-media');
-                const reveal = () => {
-                    img.classList.add('is-loaded');
-                };
-                if (img.complete && img.naturalWidth > 0) {
-                    requestAnimationFrame(reveal);
+
+                if (progressiveObserver) {
+                    progressiveObserver.observe(img);
                 } else {
-                    img.addEventListener('load', () => requestAnimationFrame(reveal), { once: true });
+                    img.dataset.progressiveVisible = '1';
+                }
+
+                if (img.complete && img.naturalWidth > 0) {
+                    markProgressiveLoaded(img);
+                } else {
+                    img.addEventListener('load', () => markProgressiveLoaded(img), { once: true });
                 }
             });
         };
 
-        document.querySelectorAll('img').forEach(img => {
-            img.addEventListener('error', function() {
-                if (this.dataset.fallbackApplied) return;
-                this.dataset.fallbackApplied = '1';
-                this.src = '/assets/placeholder.png';
-                this.classList.add('placeholder');
-                requestAnimationFrame(() => this.classList.add('is-loaded'));
-            }, { once: true });
-        });
+        const handleImageError = (event) => {
+            const target = event.target;
+            if (!target || target.tagName !== 'IMG') return;
+            if (target.dataset.fallbackApplied === '1') return;
+            target.dataset.fallbackApplied = '1';
+            target.removeAttribute('srcset');
+            target.src = '/assets/placeholder.png';
+            target.classList.add('placeholder');
+        };
+
+        window.addEventListener('error', handleImageError, true);
 
         applyProgressiveMedia();
 
@@ -340,8 +368,10 @@
             modalVisible = true;
             lastFocusedElement = document.activeElement;
             filterModal.hidden = false;
-            requestAnimationFrame(() => filterModal.classList.add('open'));
-            document.body.classList.add('modal-open');
+            requestAnimationFrame(() => {
+                filterModal.classList.add('open');
+                document.body.classList.add('modal-open');
+            });
             updateFilterButtonExpanded(true);
             await ensureSearchIndex();
             if (searchInput) {
@@ -515,10 +545,26 @@
         };
 
         if (searchInput) {
-            searchInput.addEventListener('input', async (event) => {
-                searchTerm = event.target.value.trim();
+            const SEARCH_DEBOUNCE_MS = 140;
+            let searchDebounceTimer = null;
+
+            const runSearch = async (value) => {
+                const next = value.trim();
+                if (next === searchTerm) return;
+                searchTerm = next;
                 await ensureSearchIndex();
                 renderResults();
+            };
+
+            searchInput.addEventListener('input', (event) => {
+                const { value } = event.target;
+                if (searchDebounceTimer !== null) {
+                    clearTimeout(searchDebounceTimer);
+                }
+                searchDebounceTimer = setTimeout(() => {
+                    searchDebounceTimer = null;
+                    runSearch(value).catch(() => {});
+                }, SEARCH_DEBOUNCE_MS);
             });
 
             searchInput.addEventListener('keydown', (event) => {
