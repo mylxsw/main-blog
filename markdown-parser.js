@@ -43,6 +43,18 @@ class MarkdownParser {
 
         this.md.renderer.rules.fence = renderFence;
         this.md.renderer.rules.code_block = renderCodeBlock;
+
+        const defaultImageRender = this.md.renderer.rules.image || ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+        this.md.renderer.rules.image = (tokens, idx, options, env, self) => {
+            const token = tokens[idx];
+            if (token && typeof token.attrJoin === 'function') {
+                token.attrJoin('class', 'progressive-media');
+                if (typeof token.attrGet === 'function' && typeof token.attrSet === 'function' && !token.attrGet('loading')) {
+                    token.attrSet('loading', 'lazy');
+                }
+            }
+            return defaultImageRender(tokens, idx, options, env, self);
+        };
     }
 
     /**

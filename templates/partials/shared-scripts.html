@@ -18,14 +18,41 @@
         const searchErrorMessage = t('messages.searchError', '搜索索引加载失败，请稍后再试。');
         const searchEmptyMessage = t('messages.searchNoResults', '没有找到匹配的文章。');
 
+        const PROGRESSIVE_SELECTORS = [
+            '.post-image',
+            '.article-cover img',
+            '.article-content img',
+            '.recommendation-media img'
+        ];
+        const progressiveSelector = PROGRESSIVE_SELECTORS.join(', ');
+        const applyProgressiveMedia = (scope = document) => {
+            const nodes = scope.querySelectorAll(progressiveSelector);
+            nodes.forEach(img => {
+                if (img.dataset.progressiveBound) return;
+                img.dataset.progressiveBound = '1';
+                img.classList.add('progressive-media');
+                const reveal = () => {
+                    img.classList.add('is-loaded');
+                };
+                if (img.complete && img.naturalWidth > 0) {
+                    requestAnimationFrame(reveal);
+                } else {
+                    img.addEventListener('load', () => requestAnimationFrame(reveal), { once: true });
+                }
+            });
+        };
+
         document.querySelectorAll('img').forEach(img => {
             img.addEventListener('error', function() {
                 if (this.dataset.fallbackApplied) return;
                 this.dataset.fallbackApplied = '1';
                 this.src = '/assets/placeholder.png';
                 this.classList.add('placeholder');
+                requestAnimationFrame(() => this.classList.add('is-loaded'));
             }, { once: true });
         });
+
+        applyProgressiveMedia();
 
         document.querySelectorAll('.copy-code-btn').forEach(btn => {
             btn.textContent = copyLabel;
@@ -465,7 +492,7 @@
                 }
                 const chipsHtml = chips.length ? `<div class=\"post-chips\">${chips.join('')}</div>` : '';
                 const coverHtml = item.coverImage
-                    ? `<div class=\"overflow-hidden\"><img src=\"${escapeHtml(item.coverImage)}\" alt=\"${escapeHtml(item.title)}\" class=\"post-image\" loading=\"lazy\" onerror=\"this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');\"></div>`
+                    ? `<div class=\"overflow-hidden\"><img src=\"${escapeHtml(item.coverImage)}\" alt=\"${escapeHtml(item.title)}\" class=\"post-image progressive-media\" loading=\"lazy\" onerror=\"this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');\"></div>`
                     : '';
                 return `
                     <article class="post-card">
@@ -484,6 +511,7 @@
             }).join('');
 
             resultsContainer.innerHTML = cards;
+            applyProgressiveMedia(resultsContainer);
         };
 
         if (searchInput) {

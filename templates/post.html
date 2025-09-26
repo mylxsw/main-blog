@@ -30,7 +30,7 @@
                     <article class="recommendation-card">
                         {{#if coverImage}}
                         <a href="{{url}}" class="recommendation-media">
-                            <img src="{{coverImage}}" alt="{{title}}" loading="lazy" onerror="this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');">
+                            <img src="{{coverImage}}" alt="{{title}}" class="progressive-media" loading="lazy" onerror="this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');">
                         </a>
                         {{/if}}
                         <div class="recommendation-content">
