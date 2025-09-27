@@ -102,6 +102,13 @@ class PageGenerator {
                     accent: { 400: '#38BDF8', 500: '#0EA5E9' }
                 }
             },
+            zen: {
+                bodyClass: 'theme-zen',
+                tailwindColors: {
+                    primary: { 500: '#6E64C3', 600: '#5A4FCF', 700: '#4438B7' },
+                    accent: { 400: '#A78BFA', 500: '#8B75F5' }
+                }
+            },
             sunrise: {
                 bodyClass: 'theme-sunrise',
                 tailwindColors: {

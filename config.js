@@ -8,7 +8,7 @@ module.exports = {
     },
     theme: {
         /**
-         * 可选配色方案：modern（蓝紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）
+         * 可选配色方案：modern（蓝紫）、zen（雾霭灰紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）
          */
         palette: 'modern'
     },
@@ -63,7 +63,7 @@ module.exports = {
          * Google AdSense 等广告联盟要求的 ads.txt 中的发布者 ID。
          * 请替换为真实 ID。
          */
-        publisherId: 'pub-0000000000000000'
+        publisherId: 'pub-6795823110480470'
     },
     footer: {
         /**
@@ -102,11 +102,19 @@ module.exports = {
         /**
          * 自定义统计脚本，将插入到 <head> 标签内（支持HTML片段）
          */
-        head: '',
+        head: '<meta name="google-adsense-account" content="ca-pub-6795823110480470">',
         /**
          * 自定义统计脚本，将插入到 </body> 前（支持HTML片段）
          */
-        bodyEnd: ''
+        bodyEnd: `<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?3d87496c74732089ca666fb733ce41e8";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>`
     },
     i18n: {
         showLanguageSwitcher: false,
