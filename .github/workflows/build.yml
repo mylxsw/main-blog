@@ -22,11 +22,11 @@ jobs:
     outputs:
       should-deploy: ${{ steps.check-commit.outputs.should-deploy }}
     steps:
-      - name: Check if commit message contains @deploy
+      - name: Check if commit message contains @deploytoserver
         id: check-commit
         run: |
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          if echo "$COMMIT_MSG" | grep -q "@deploy"; then
+          if echo "$COMMIT_MSG" | grep -q "@deploytoserver"; then
             echo "should-deploy=true" >> $GITHUB_OUTPUT
           else
             echo "should-deploy=false" >> $GITHUB_OUTPUT
