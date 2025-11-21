@@ -1002,7 +1002,8 @@ class PageGenerator {
                 const postUrl = `${siteRoot}${relativeUrl}`;
                 return {
                     title: post.attributes.title || this.translate(language, 'content.untitled', 'Untitled'),
-                    description: post.html,
+                    description: this.getExcerpt(post.html, 200),
+                    content: post.html,
                     link: postUrl,
                     guid: postUrl,
                     pubDate: post.attributes.date ? new Date(post.attributes.date).toUTCString() : new Date().toUTCString(),
@@ -1022,7 +1023,7 @@ class PageGenerator {
 
     getRSSTemplate() {
         return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>{{title}}</title>
     <description>{{description}}</description>
@@ -1036,6 +1037,7 @@ class PageGenerator {
     <item>
       <title><![CDATA[{{title}}]]></title>
       <description><![CDATA[{{description}}]]></description>
+      <content:encoded><![CDATA[{{content}}]]></content:encoded>
       <link>{{link}}</link>
       <guid isPermaLink="true">{{guid}}</guid>
       <pubDate>{{pubDate}}</pubDate>
