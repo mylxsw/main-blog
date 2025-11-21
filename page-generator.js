@@ -1036,8 +1036,8 @@ class PageGenerator {
     {{#each items}}
     <item>
       <title><![CDATA[{{title}}]]></title>
-      <description><![CDATA[{{description}}]]></description>
-      <content:encoded><![CDATA[{{content}}]]></content:encoded>
+      <description><![CDATA[{{{description}}}]]></description>
+      <content:encoded><![CDATA[{{{content}}}]]></content:encoded>
       <link>{{link}}</link>
       <guid isPermaLink="true">{{guid}}</guid>
       <pubDate>{{pubDate}}</pubDate>
