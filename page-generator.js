@@ -1002,7 +1002,7 @@ class PageGenerator {
                 const postUrl = `${siteRoot}${relativeUrl}`;
                 return {
                     title: post.attributes.title || this.translate(language, 'content.untitled', 'Untitled'),
-                    description: this.getExcerpt(post.html, 200),
+                    description: post.html,
                     link: postUrl,
                     guid: postUrl,
                     pubDate: post.attributes.date ? new Date(post.attributes.date).toUTCString() : new Date().toUTCString(),
