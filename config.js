@@ -179,6 +179,9 @@ var _hmt = _hmt || [];
                     tags: {
                         description: '共 {{count}} 篇与该标签相关的文章',
                         pageTitleSuffix: '标签'
+                    },
+                    toc: {
+                        title: '目录'
                     }
                 }
             },
@@ -241,6 +244,9 @@ var _hmt = _hmt || [];
                     tags: {
                         description: '{{count}} posts tagged with this topic',
                         pageTitleSuffix: 'Tags'
+                    },
+                    toc: {
+                        title: 'Table of Contents'
                     }
                 }
             }

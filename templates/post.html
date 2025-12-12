@@ -1,5 +1,6 @@
 {{#> layout}}
-    <main class="mx-0 px-4 sm:px-6 lg:px-8 py-4">
+<main class="mx-0 px-4 sm:px-6 lg:px-8 py-4">
+    <div class="post-layout-container">
         <article class="article-container{{#if coverImage}} has-cover{{/if}}">
             <div class="article-header">
                 <h1 class="article-title">{{title}}</h1>
@@ -20,7 +21,7 @@
                 </div>
             </div>
             <div class="article-content">
-{{{content}}}
+                {{{content}}}
             </div>
             {{#if hasRecommendations}}
             <aside class="article-recommendations" aria-label="{{t 'recommendations.aria'}}">
@@ -30,7 +31,8 @@
                     <article class="recommendation-card">
                         {{#if coverImage}}
                         <a href="{{url}}" class="recommendation-media">
-                            <img src="{{coverImage}}" alt="{{title}}" class="progressive-media" loading="lazy" onerror="this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');">
+                            <img src="{{coverImage}}" alt="{{title}}" class="progressive-media" loading="lazy"
+                                onerror="this.onerror=null;this.src='/assets/placeholder.svg';this.classList.add('placeholder');">
                         </a>
                         {{/if}}
                         <div class="recommendation-content">
@@ -45,5 +47,122 @@
             </aside>
             {{/if}}
         </article>
-    </main>
+
+        {{#if hasToc}}
+        <button id="toc-toggle" class="toc-toggle" aria-label="{{t 'nav.toggleMenu' 'Toggle TOC'}}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+        </button>
+        <aside id="post-sidebar" class="post-sidebar">
+            <nav class="article-toc" aria-label="{{t 'toc.title' 'Table of Contents'}}">
+                <div class="toc-header">
+                    {{t 'toc.title'}}
+                    <button id="toc-close" class="toc-close" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <ul class="toc-list">
+                    {{#each toc}}
+                    <li class="toc-item toc-level-{{level}}">
+                        <a href="#{{slug}}" class="toc-link">{{text}}</a>
+                    </li>
+                    {{/each}}
+                </ul>
+            </nav>
+        </aside>
+        <script>
+            (function () {
+                var toggle = document.getElementById('toc-toggle');
+                var sidebar = document.getElementById('post-sidebar');
+                var close = document.getElementById('toc-close');
+                var navbar = document.querySelector('.navbar');
+                var root = document.documentElement;
+                var tocOffsetVar = '--toc-offset';
+
+                if (toggle && sidebar) {
+                    toggle.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        sidebar.classList.toggle('mobile-active');
+                    });
+
+                    if (close) {
+                        close.addEventListener('click', function () {
+                            sidebar.classList.remove('mobile-active');
+                        });
+                    }
+
+                    // Close when clicking outside
+                    document.addEventListener('click', function (e) {
+                        if (!sidebar.classList.contains('mobile-active')) return;
+
+                        var tocPanel = sidebar.querySelector('.article-toc');
+                        var clickedInsidePanel = tocPanel && tocPanel.contains(e.target);
+                        var clickedToggle = e.target === toggle;
+
+                        if (!clickedInsidePanel && !clickedToggle) {
+                            sidebar.classList.remove('mobile-active');
+                        }
+                    });
+
+                    // Close when clicking a link
+                    var links = sidebar.querySelectorAll('a');
+                    for (var i = 0; i < links.length; i++) {
+                        links[i].addEventListener('click', function () {
+                            if (window.innerWidth < 1024) {
+                                sidebar.classList.remove('mobile-active');
+                            }
+                        });
+                    }
+                }
+
+                // Keep TOC below navbar when it's visible, otherwise pin to top
+                var lastOffset = null;
+                var navbarSpacing = 12; // px gap between navbar and TOC
+                function setTocOffset(offset) {
+                    if (lastOffset === offset) return;
+                    lastOffset = offset;
+                    root.style.setProperty(tocOffsetVar, offset + 'px');
+                }
+
+                function computeOffset() {
+                    if (!navbar) {
+                        setTocOffset(16);
+                        return;
+                    }
+                    var rect = navbar.getBoundingClientRect();
+                    if (rect.bottom > 0 && rect.top < window.innerHeight) {
+                        setTocOffset(rect.height + navbarSpacing);
+                    } else {
+                        setTocOffset(16);
+                    }
+                }
+
+                if (navbar) {
+                    computeOffset();
+                    var observer = new IntersectionObserver(function (entries) {
+                        entries.forEach(function (entry) {
+                            if (entry.target === navbar) {
+                                computeOffset();
+                            }
+                        });
+                    }, { threshold: [0, 1] });
+                    observer.observe(navbar);
+                    window.addEventListener('resize', computeOffset);
+                }
+            })();
+        </script>
+        {{/if}}
+    </div>
+</main>
 {{/layout}}

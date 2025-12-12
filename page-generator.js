@@ -18,11 +18,11 @@ const SOCIAL_ICON_SVGS = {
     rss: '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><g transform="translate(0 -1028.4)"><g><path d="m4 1031.4c-1.1046 0-2 0.9-2 2v16c0 1.1 0.8954 2 2 2h16c1.105 0 2-0.9 2-2v-16c0-1.1-0.895-2-2-2h-16z" fill="#d35400"/><path d="m4 2c-1.1046 0-2 0.8954-2 2v16c0 1.105 0.8954 2 2 2h16c1.105 0 2-0.895 2-2v-16c0-1.1046-0.895-2-2-2h-16z" transform="translate(0 1028.4)" fill="#e67e22"/><path d="m5 1034.4v2.3c6.443 0 11.667 5.2 11.667 11.7h2.333c0-7.8-6.268-14-14-14zm0 4.6v2.4c3.866 0 7 3.1 7 7h2.333c0-5.2-4.178-9.4-9.333-9.4zm2.0417 5.3c-1.1276 0-2.0417 0.9-2.0417 2s0.9141 2.1 2.0417 2.1c1.1275 0 2.0416-1 2.0416-2.1s-0.9141-2-2.0416-2z" fill="#d35400"/><path d="m5 1033.4v2.3c6.443 0 11.667 5.2 11.667 11.7h2.333c0-7.8-6.268-14-14-14zm0 4.6v2.4c3.866 0 7 3.1 7 7h2.333c0-5.2-4.178-9.4-9.333-9.4zm2.0417 5.3c-1.1276 0-2.0417 0.9-2.0417 2s0.9141 2.1 2.0417 2.1c1.1275 0 2.0416-1 2.0416-2.1s-0.9141-2-2.0416-2z" fill="#ecf0f1"/></g></g></svg>'
 };
 
-handlebars.registerHelper('eq', function(a, b) {
+handlebars.registerHelper('eq', function (a, b) {
     return a === b;
 });
 
-handlebars.registerHelper('range', function(start, end) {
+handlebars.registerHelper('range', function (start, end) {
     const result = [];
     for (let i = start; i <= end; i++) {
         result.push(i);
@@ -30,7 +30,7 @@ handlebars.registerHelper('range', function(start, end) {
     return result;
 });
 
-handlebars.registerHelper('t', function(key, options) {
+handlebars.registerHelper('t', function (key, options) {
     const translations = options?.data?.root?.translations || {};
     const fallback = options?.hash?.fallback ?? key;
     const value = key.split('.').reduce((acc, part) => (
@@ -39,7 +39,7 @@ handlebars.registerHelper('t', function(key, options) {
     return typeof value === 'string' ? value : fallback;
 });
 
-handlebars.registerHelper('json', function(context) {
+handlebars.registerHelper('json', function (context) {
     return JSON.stringify(context ?? {});
 });
 
@@ -835,6 +835,12 @@ class PageGenerator {
         const recommendedPosts = this.getRecommendedPosts(post, allPosts, language);
         const metaDescription = this.getExcerpt(post.html, 160);
 
+        let content = post.html;
+        if (post.attributes.coverImage && !content.includes(post.attributes.coverImage)) {
+            const coverImageTag = `<p><img src="${post.attributes.coverImage}" alt="${post.attributes.title || ''}" class="progressive-media" loading="lazy"></p>`;
+            content = coverImageTag + content;
+        }
+
         const baseData = this.createBaseTemplateData(language, navigation, availableTags);
         const data = {
             ...baseData,
@@ -844,12 +850,14 @@ class PageGenerator {
             dateISO,
             tags: this.getTagsWithUrls(post.attributes.tags, language),
             coverImage: post.attributes.coverImage || '',
-            content: post.html,
+            content: content,
             category,
             seoKeywords,
             recommendedPosts,
             hasRecommendations: recommendedPosts.length > 0,
-            metaDescription
+            metaDescription,
+            toc: post.toc || [],
+            hasToc: post.toc && post.toc.length > 0
         };
 
         const outputPath = this.getOutputPath(post.relativePath, language);
@@ -1248,6 +1256,7 @@ class PageGenerator {
                 relativePath,
                 attributes,
                 html: parsed.html,
+                toc: parsed.toc,
                 language
             };
 

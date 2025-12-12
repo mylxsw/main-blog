@@ -65,15 +65,53 @@ class MarkdownParser {
     parseFile(filePath) {
         const content = fs.readFileSync(filePath, 'utf-8');
         const parsed = fm(content);
-        
+
         // 移除正文中的第一个H1标题，避免与模板标题重复
         const bodyWithoutFirstH1 = this.removeFirstH1(parsed.body || '');
-        
+
+        const tokens = this.md.parse(bodyWithoutFirstH1, {});
+        const toc = [];
+        const slugCounts = {};
+
+        tokens.forEach((token, index) => {
+            if (token.type === 'heading_open') {
+                const level = parseInt(token.tag.replace('h', ''), 10);
+                if (level >= 2 && level <= 4) {
+                    const inlineToken = tokens[index + 1];
+                    const text = inlineToken ? inlineToken.content : '';
+                    let slug = this.slugify(text);
+
+                    // Handle duplicate slugs
+                    if (slugCounts[slug]) {
+                        slugCounts[slug]++;
+                        slug = `${slug}-${slugCounts[slug]}`;
+                    } else {
+                        slugCounts[slug] = 1;
+                    }
+
+                    token.attrSet('id', slug);
+                    toc.push({ level, text, slug });
+                }
+            }
+        });
+
+        const html = this.md.renderer.render(tokens, this.md.options);
+
         return {
             attributes: parsed.attributes || {},
             body: parsed.body || '',
-            html: this.md.render(bodyWithoutFirstH1)
+            html: html,
+            toc: toc
         };
+    }
+
+    slugify(text) {
+        return text.toString().toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\u4e00-\u9fa5-]+/g, '')
+            .replace(/--+/g, '-')
+            .replace(/^-+/, '')
+            .replace(/-+$/, '');
     }
 
     /**
@@ -86,19 +124,19 @@ class MarkdownParser {
         const lines = markdown.split('\n');
         let firstH1Found = false;
         const filteredLines = [];
-        
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            
+
             // 检查是否是H1标题 (# 开头，但不是 ## 或更多#)
             if (!firstH1Found && /^# [^#]/.test(line)) {
                 firstH1Found = true;
                 continue; // 跳过这一行
             }
-            
+
             filteredLines.push(lines[i]);
         }
-        
+
         return filteredLines.join('\n');
     }
 
