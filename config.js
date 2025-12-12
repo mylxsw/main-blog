@@ -25,7 +25,7 @@ module.exports = {
              * 指定导航栏中直接展示的分类名称，按照数组顺序显示。
              * 未列出的分类会被归入“更多”下拉菜单中。
              */
-            topLevel: ['技术分享', '读书'],
+            topLevel: ['AI 日报', '技术分享', '读书'],
             /**
              * 自定义“更多”菜单的文案。
              */
@@ -83,7 +83,7 @@ module.exports = {
         externalLinks: [
             { label: 'AIdea', url: 'https://aidea.aicode.cc', description: 'AI Chat' },
             { label: '微信公众号', url: 'https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzA3NTU1NDk4Mg==&action=getalbum&album_id=4168897503414140947&scene=126&sessionid=1758786267888#wechat_redirect', description: '' },
-            { label: '人人链向未来', url: 'https://wy.is'},
+            { label: '人人链向未来', url: 'https://wy.is' },
         ],
         /**
          * 社交平台链接配置，示例：
