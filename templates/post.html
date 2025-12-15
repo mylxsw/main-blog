@@ -21,6 +21,15 @@
                 </div>
             </div>
             <div class="article-content">
+                {{#if summary.hasContent}}
+                <div class="article-summary" role="note" aria-label="{{summary.title}}">
+                    <div class="article-summary-header">
+                        <span class="article-summary-icon" aria-hidden="true">⚡</span>
+                        <div class="article-summary-title">{{summary.title}}</div>
+                    </div>
+                    <div class="article-summary-body">{{{summary.html}}}</div>
+                </div>
+                {{/if}}
                 {{{content}}}
             </div>
             {{#if hasRecommendations}}

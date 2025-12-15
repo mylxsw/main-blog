@@ -78,7 +78,7 @@ class MarkdownParser {
                 const level = parseInt(token.tag.replace('h', ''), 10);
                 if (level >= 2 && level <= 4) {
                     const inlineToken = tokens[index + 1];
-                    const text = inlineToken ? inlineToken.content : '';
+                    const text = this.getInlineText(inlineToken);
                     let slug = this.slugify(text);
 
                     // Handle duplicate slugs
@@ -112,6 +112,26 @@ class MarkdownParser {
             .replace(/--+/g, '-')
             .replace(/^-+/, '')
             .replace(/-+$/, '');
+    }
+
+    getInlineText(inlineToken) {
+        if (!inlineToken) return '';
+        if (Array.isArray(inlineToken.children) && inlineToken.children.length) {
+            const text = inlineToken.children.map(child => {
+                if (child.type === 'text' || child.type === 'code_inline') {
+                    return child.content || '';
+                }
+                if (child.type === 'softbreak' || child.type === 'hardbreak') {
+                    return ' ';
+                }
+                if (child.type === 'emoji') {
+                    return child.markup || child.content || '';
+                }
+                return '';
+            }).join('');
+            return text.replace(/\s+/g, ' ').trim();
+        }
+        return (inlineToken.content || '').trim();
     }
 
     /**

@@ -669,6 +669,32 @@ class PageGenerator {
         return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
     }
 
+    buildSummary(rawSummary, language) {
+        let title = '';
+        let content = '';
+
+        if (rawSummary && typeof rawSummary === 'object' && !Array.isArray(rawSummary)) {
+            title = typeof rawSummary.title === 'string' ? rawSummary.title.trim() : '';
+            if (typeof rawSummary.content === 'string') {
+                content = rawSummary.content;
+            } else if (Array.isArray(rawSummary.items)) {
+                content = rawSummary.items.map(item => (typeof item === 'string' ? item : '')).filter(Boolean).join('\n');
+            }
+        } else if (Array.isArray(rawSummary)) {
+            content = rawSummary.map(item => (typeof item === 'string' ? item : '')).filter(Boolean).join('\n');
+        } else if (typeof rawSummary === 'string') {
+            content = rawSummary;
+        }
+
+        const html = content ? this.parser.md.render(content) : '';
+
+        return {
+            title: title || this.translate(language, 'summary.title', '要点速览'),
+            html,
+            hasContent: !!html.trim()
+        };
+    }
+
     collectTags(posts, language) {
         const tagMap = new Map();
         posts.forEach(post => {
@@ -834,6 +860,7 @@ class PageGenerator {
         const seoKeywords = this.normalizeSeoKeywords(post.attributes.seo);
         const recommendedPosts = this.getRecommendedPosts(post, allPosts, language);
         const metaDescription = this.getExcerpt(post.html, 160);
+        const summary = this.buildSummary(post.attributes.summary, language);
 
         let content = post.html;
         if (post.attributes.coverImage && !content.includes(post.attributes.coverImage)) {
@@ -857,7 +884,8 @@ class PageGenerator {
             hasRecommendations: recommendedPosts.length > 0,
             metaDescription,
             toc: post.toc || [],
-            hasToc: post.toc && post.toc.length > 0
+            hasToc: post.toc && post.toc.length > 0,
+            summary
         };
 
         const outputPath = this.getOutputPath(post.relativePath, language);
@@ -872,6 +900,7 @@ class PageGenerator {
         });
 
         const baseData = this.createBaseTemplateData(language, navigation, availableTags);
+        const summary = this.buildSummary(page.attributes.summary, language);
         const data = {
             ...baseData,
             title: page.attributes.title || this.translate(language, 'content.untitled', 'Untitled'),
@@ -885,7 +914,8 @@ class PageGenerator {
             seoKeywords: this.normalizeSeoKeywords(page.attributes.seo),
             recommendedPosts: [],
             hasRecommendations: false,
-            metaDescription: this.getExcerpt(page.html, 160)
+            metaDescription: this.getExcerpt(page.html, 160),
+            summary
         };
 
         const outputPath = this.getOutputPath(page.relativePath, language);
@@ -1308,4 +1338,3 @@ class PageGenerator {
 }
 
 module.exports = PageGenerator;
-

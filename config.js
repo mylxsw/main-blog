@@ -10,7 +10,7 @@ module.exports = {
         /**
          * 可选配色方案：modern（蓝紫）、zen（雾霭灰紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）
          */
-        palette: 'modern'
+        palette: 'midnight'
     },
     pagination: {
         pageSize: 9,
@@ -182,6 +182,9 @@ var _hmt = _hmt || [];
                     },
                     toc: {
                         title: '目录'
+                    },
+                    summary: {
+                        title: '要点速览'
                     }
                 }
             },
@@ -247,6 +250,9 @@ var _hmt = _hmt || [];
                     },
                     toc: {
                         title: 'Table of Contents'
+                    },
+                    summary: {
+                        title: 'Key Takeaways'
                     }
                 }
             }
