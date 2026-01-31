@@ -788,7 +788,7 @@ class PageGenerator {
                 defaultCategoryName
             },
             homeUrl: this.buildLanguageUrl(language, [], { trailingSlash: true }),
-            aboutUrl: this.buildLanguageUrl(language, 'about.html'),
+            aboutUrl: this.config.navigation?.aboutUrl || this.buildLanguageUrl(language, 'about.html'),
             filterLabel: this.translate(language, 'nav.filter', 'Filter'),
             toggleMenuLabel: this.translate(language, 'nav.toggleMenu', 'Toggle menu'),
             languages: showLanguageSwitcher ? languages : languages.slice(0, 1),

@@ -20,6 +20,10 @@ module.exports = {
          * 导航栏是否固定在页面顶部（true 固定，false 随页面滚动）
          */
         sticky: false,
+        /**
+         * 导航栏“关于”按钮的跳转地址（支持外部链接）
+         */
+        aboutUrl: 'https://gulu.ai',
         categories: {
             /**
              * 指定导航栏中直接展示的分类名称，按照数组顺序显示。
