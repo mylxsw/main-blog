@@ -664,6 +664,10 @@ class PageGenerator {
         return this.buildLanguageUrl(language, segments);
     }
 
+    buildCanonicalUrl(relativePath, language) {
+        return `${(this.config.site.url || 'http://localhost:8080').replace(/\/$/, '')}${this.getRelativeUrl(relativePath, language)}`;
+    }
+
     getExcerpt(html, maxLength = 200) {
         const text = html.replace(/<[^>]*>/g, '').trim();
         return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
@@ -885,7 +889,9 @@ class PageGenerator {
             metaDescription,
             toc: post.toc || [],
             hasToc: post.toc && post.toc.length > 0,
-            summary
+            summary,
+            canonicalUrl: this.buildCanonicalUrl(post.relativePath, language),
+            ogType: 'article'
         };
 
         const outputPath = this.getOutputPath(post.relativePath, language);
@@ -915,7 +921,9 @@ class PageGenerator {
             recommendedPosts: [],
             hasRecommendations: false,
             metaDescription: this.getExcerpt(page.html, 160),
-            summary
+            summary,
+            canonicalUrl: this.buildCanonicalUrl(page.relativePath, language),
+            ogType: 'article'
         };
 
         const outputPath = this.getOutputPath(page.relativePath, language);
@@ -940,7 +948,11 @@ class PageGenerator {
             posts: pagePosts.map(post => this.buildListingItem(post, language)),
             pagination: this.buildPagination(page, totalPages, language),
             hasPosts: pagePosts.length > 0,
-            isHomeFirstPage: page === 1
+            isHomeFirstPage: page === 1,
+            canonicalUrl: page === 1
+                ? this.getSiteUrl(language, [], { trailingSlash: true })
+                : this.getSiteUrl(language, ['page', String(page)], { trailingSlash: true }),
+            ogType: 'website'
         };
 
         const outputPath = page === 1
@@ -950,7 +962,7 @@ class PageGenerator {
         this.writeHtml(outputPath, template(data));
     }
 
-    generateListingPage({ title, heading, posts, outputPath, navigation, availableTags, language }) {
+    generateListingPage({ title, heading, posts, outputPath, navigation, availableTags, language, canonicalUrl = '' }) {
         const template = compile(this.getTemplate('listing.html'));
         const baseData = this.createBaseTemplateData(language, navigation, availableTags);
         const data = {
@@ -958,7 +970,9 @@ class PageGenerator {
             title,
             heading,
             posts,
-            hasPosts: Array.isArray(posts) && posts.length > 0
+            hasPosts: Array.isArray(posts) && posts.length > 0,
+            canonicalUrl,
+            ogType: 'website'
         };
         this.writeHtml(outputPath, template(data));
     }
@@ -986,7 +1000,8 @@ class PageGenerator {
                 outputPath,
                 navigation,
                 availableTags: Array.isArray(allTags) ? allTags : tags,
-                language
+                language,
+                canonicalUrl: this.getSiteUrl(language, ['tags', tag.slug], { trailingSlash: true })
             });
         });
     }
@@ -1015,7 +1030,8 @@ class PageGenerator {
                 outputPath,
                 navigation,
                 availableTags,
-                language
+                language,
+                canonicalUrl: this.getSiteUrl(language, ['categories', category.slug], { trailingSlash: true })
             });
         });
     }
