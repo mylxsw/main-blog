@@ -12,6 +12,20 @@
     {{else}}
     <meta name="description" content="{{site.description}}">
     {{/if}}
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{title}}">
+    <meta property="og:description" content="{{#if metaDescription}}{{metaDescription}}{{else}}{{site.description}}{{/if}}">
+    <meta property="og:type" content="{{#if ogType}}{{ogType}}{{else}}website{{/if}}">
+    {{#if canonicalUrl}}<meta property="og:url" content="{{canonicalUrl}}">{{/if}}
+    <meta property="og:site_name" content="{{site.title}}">
+    {{#if coverImage}}<meta property="og:image" content="{{coverImage}}">{{/if}}
+    {{#if (eq ogType "article")}}
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="{{#if coverImage}}summary_large_image{{else}}summary{{/if}}">
+    <meta name="twitter:title" content="{{title}}">
+    <meta name="twitter:description" content="{{#if metaDescription}}{{metaDescription}}{{else}}{{site.description}}{{/if}}">
+    {{#if coverImage}}<meta name="twitter:image" content="{{coverImage}}">{{/if}}
+    {{/if}}
     <link rel="stylesheet" href="/styles/modern.css">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}} RSS Feed" href="{{assets.rss}}">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="{{assets.sitemap}}">
