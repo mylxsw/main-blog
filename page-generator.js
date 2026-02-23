@@ -1268,6 +1268,12 @@ class PageGenerator {
         } else if (assetsSourceDir === this.publicDir) {
             console.log('Assets directory is the same as target directory, skipping copy.');
         }
+
+        const staticSourceDir = path.join(__dirname, 'static');
+        if (fs.existsSync(staticSourceDir)) {
+            fs.copySync(staticSourceDir, this.publicDir);
+            console.log('Static assets copied successfully!');
+        }
     }
 
     generateAll() {
