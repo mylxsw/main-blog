@@ -4,6 +4,7 @@ module.exports = {
         description: '技术分享 & 读书，我们共同成长！',
         author: 'mylxsw',
         url: 'https://aicode.cc', // RSS需要的站点URL
+        logo: 'https://aicode.cc/logo.svg',
         copyrightYear: new Date().getFullYear()
     },
     theme: {
