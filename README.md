@@ -25,6 +25,7 @@ markdown-blog/
 ├── docker-compose.static.yml  # Docker Compose静态部署配置文件
 ├── nginx.simple.conf       # Nginx配置文件
 └── README.md               # 项目说明文档
+
 ```
 
 ## 快速开始
