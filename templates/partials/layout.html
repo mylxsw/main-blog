@@ -18,6 +18,7 @@
     <meta property="og:type" content="{{#if ogType}}{{ogType}}{{else}}website{{/if}}">
     {{#if canonicalUrl}}<meta property="og:url" content="{{canonicalUrl}}">{{/if}}
     <meta property="og:site_name" content="{{site.title}}">
+    {{#if site.logo}}<meta property="og:logo" content="{{site.logo}}">{{/if}}
     {{#if coverImage}}<meta property="og:image" content="{{coverImage}}">{{/if}}
     {{#if (eq ogType "article")}}
     <!-- Twitter Card -->
