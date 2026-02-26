@@ -9,9 +9,9 @@ module.exports = {
     },
     theme: {
         /**
-         * 可选配色方案：modern（蓝紫）、zen（雾霭灰紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）
+         * 可选配色方案：modern（蓝紫）、zen（雾霭灰紫）、sunrise（暖橙粉）、midnight（冷色蓝紫）、forest（森系绿）、ocean（碧海蓝）、latte（奶咖米）、minimal（极简黑白/彩虹黑）
          */
-        palette: 'midnight'
+        palette: 'minimal'
     },
     pagination: {
         pageSize: 9,

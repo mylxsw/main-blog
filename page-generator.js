@@ -143,6 +143,13 @@ class PageGenerator {
                     primary: { 500: '#B45309', 600: '#92400E', 700: '#78350F' },
                     accent: { 400: '#D97706', 500: '#F59E0B' }
                 }
+            },
+            minimal: {
+                bodyClass: 'theme-minimal',
+                tailwindColors: {
+                    primary: { 500: '#171717', 600: '#0a0a0a', 700: '#000000' },
+                    accent: { 400: '#525252', 500: '#404040' }
+                }
             }
         };
 

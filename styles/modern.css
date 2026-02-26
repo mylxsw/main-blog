@@ -52,7 +52,8 @@ body.theme-sunrise,
 body.theme-midnight,
 body.theme-forest,
 body.theme-ocean,
-body.theme-latte {
+body.theme-latte,
+body.theme-minimal {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -447,6 +448,82 @@ body.theme-latte.theme-dark {
   background: radial-gradient(circle at 20% 14%, rgba(var(--color-primary-rgb), 0.24), transparent 55%),
     radial-gradient(circle at 80% -8%, rgba(var(--color-secondary-rgb), 0.2), transparent 52%),
     linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-end) 100%);
+}
+
+body.theme-minimal {
+  --color-bg-start: #ffffff;
+  --color-bg-end: #fafafa;
+  --color-surface: rgba(255, 255, 255, 0.95);
+  --color-surface-strong: rgba(255, 255, 255, 1);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --color-text: #0a0a0a;
+  --color-muted: #525252;
+  --color-muted-strong: #262626;
+  --color-primary: #171717;
+  --color-primary-rgb: 23, 23, 23;
+  --color-primary-strong: #000000;
+  --color-primary-strong-rgb: 0, 0, 0;
+  --color-primary-soft: rgba(0, 0, 0, 0.04);
+  --color-secondary: #404040;
+  --color-secondary-rgb: 64, 64, 64;
+  --color-secondary-alt: #525252;
+  --color-secondary-alt-rgb: 82, 82, 82;
+  --color-secondary-bright-rgb: 0, 0, 0;
+  --color-secondary-soft: rgba(0, 0, 0, 0.04);
+  --color-glow: rgba(0, 0, 0, 0.05);
+  --color-shadow: rgba(0, 0, 0, 0.04);
+  --color-shadow-strong: rgba(0, 0, 0, 0.08);
+  --color-navbar-light-start-rgb: 255, 255, 255;
+  --color-navbar-light-end-rgb: 250, 250, 250;
+  --color-navbar-dark-start-rgb: 10, 10, 10;
+  --color-navbar-dark-end-rgb: 0, 0, 0;
+  --color-footer: #fafafa;
+  background: linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-end) 100%);
+  color: var(--color-text);
+}
+
+body.theme-minimal.theme-light {
+  color-scheme: light;
+}
+
+body.theme-minimal.theme-dark {
+  color-scheme: dark;
+  --color-bg-start: #0a0a0c;
+  --color-bg-end: #050505;
+  --color-surface: rgba(10, 10, 12, 0.92);
+  --color-surface-strong: rgba(15, 15, 18, 0.97);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-text: #efefef;
+  --color-muted: #9ca3af;
+  --color-muted-strong: #e5e7eb;
+  --color-primary: #e5e5e5;
+  --color-primary-rgb: 229, 229, 229;
+  --color-primary-strong: #ffffff;
+  --color-primary-strong-rgb: 255, 255, 255;
+  --color-primary-soft: rgba(255, 255, 255, 0.08);
+  --color-secondary: #a3a3a3;
+  --color-secondary-rgb: 163, 163, 163;
+  --color-secondary-alt: #d4d4d4;
+  --color-secondary-alt-rgb: 212, 212, 212;
+  --color-secondary-bright-rgb: 255, 255, 255;
+  --color-secondary-soft: rgba(255, 255, 255, 0.06);
+  --color-glow: rgba(168, 85, 247, 0.2);
+  --color-shadow: rgba(0, 0, 0, 0.8);
+  --color-shadow-strong: rgba(0, 0, 0, 0.95);
+  --color-navbar-light-start-rgb: 20, 20, 25;
+  --color-navbar-light-end-rgb: 10, 10, 10;
+  --color-navbar-dark-start-rgb: 5, 5, 5;
+  --color-navbar-dark-end-rgb: 0, 0, 0;
+  --color-footer: #050505;
+  /* 彩虹黑：深邃黑中透出微弱的彩虹极光质感渐变 */
+  background:
+    radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.06), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.06), transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.04), transparent 50%),
+    radial-gradient(circle at 20% 85%, rgba(244, 63, 94, 0.05), transparent 45%),
+    var(--color-bg-start);
 }
 
 .sr-only {
@@ -2192,7 +2269,7 @@ body.theme-dark .article-content table tbody tr:nth-child(even) td {
     border-color var(--motion-duration-short) var(--motion-ease-standard),
     box-shadow var(--motion-duration-medium) var(--motion-ease-decelerate),
     transform var(--motion-duration-medium) var(--motion-ease-decelerate);
-  box-shadow: 0 16px 32px rgba(var(--color-navbar-light-start-rgb), 0.16);
+  /* box-shadow: 0 16px 32px rgba(var(--color-navbar-light-start-rgb), 0.16); */
 }
 
 .footer-link-chip:hover {
@@ -3063,4 +3140,89 @@ body.theme-dark .article-content table tbody tr:nth-child(even) td {
     height: auto;
     aspect-ratio: 1 / 1;
   }
+}
+
+/* Minimal theme light mode overrides for fixed elements like navbar */
+body.theme-minimal.theme-light .navbar-logo {
+  color: var(--color-text);
+}
+
+body.theme-minimal.theme-light .navbar-logo:hover {
+  color: var(--color-primary-strong);
+}
+
+body.theme-minimal.theme-light .nav-item,
+body.theme-minimal.theme-light .nav-dropdown-toggle {
+  color: var(--color-muted-strong);
+}
+
+body.theme-minimal.theme-light .nav-item:hover,
+body.theme-minimal.theme-light .nav-dropdown-toggle:hover,
+body.theme-minimal.theme-light .nav-item.active,
+body.theme-minimal.theme-light .nav-dropdown-toggle[aria-expanded="true"] {
+  color: var(--color-primary-strong);
+}
+
+body.theme-minimal.theme-light .navbar-toggle span {
+  background: var(--color-muted-strong);
+}
+
+
+
+/* Make RSS special button cleaner in minimal theme */
+body.theme-minimal.theme-light .nav-item-special {
+  background: #fafafa;
+  color: #262626;
+  border: 1px solid #d4d4d4;
+}
+
+body.theme-minimal.theme-light .nav-item-special:hover {
+  background: #f5f5f5;
+  color: #000;
+  border-color: #a3a3a3;
+  transform: translateY(-1px);
+}
+
+body.theme-minimal.theme-dark .nav-item-special {
+  background: #171717;
+  color: #e5e5e5;
+  border: 1px solid #404040;
+}
+
+body.theme-minimal.theme-dark .nav-item-special:hover {
+  background: #262626;
+  color: #fff;
+  border-color: #525252;
+  transform: translateY(-1px);
+}
+
+/* Minimal theme dropdown overrides */
+body.theme-minimal.theme-light .nav-dropdown-menu {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-minimal.theme-light .nav-dropdown-item {
+  color: var(--color-muted-strong);
+}
+
+body.theme-minimal.theme-light .nav-dropdown-item:hover,
+body.theme-minimal.theme-light .nav-dropdown-item.active {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-primary-strong);
+}
+
+body.theme-minimal.theme-dark .nav-dropdown-menu {
+  background: rgba(10, 10, 12, 0.95);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-minimal.theme-dark .nav-dropdown-item {
+  color: var(--color-muted-strong);
+}
+
+body.theme-minimal.theme-dark .nav-dropdown-item:hover,
+body.theme-minimal.theme-dark .nav-dropdown-item.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-primary-strong);
 }
