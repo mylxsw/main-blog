@@ -15,6 +15,14 @@ module.exports = {
     },
     pagination: {
         pageSize: 9,
+        maxVisiblePages: 11,
+    },
+    home: {
+        /**
+         * 首页文章列表中排除的分类名称或 slug。
+         * 被排除的文章仍会出现在各自分类页、标签页、RSS 和搜索索引中。
+         */
+        excludeCategories: ['AI 日报']
     },
     navigation: {
         /**

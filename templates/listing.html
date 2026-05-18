@@ -43,5 +43,27 @@
                 <div class="empty-state">{{t 'messages.empty'}}</div>
             {{/if}}
         </div>
+
+        {{#if hasPagination}}
+            <div class="pagination">
+                {{#if pagination.hasPrev}}
+                    <a href="{{pagination.prevUrl}}" class="pagination-item">&laquo; {{t 'pagination.previous'}}</a>
+                {{/if}}
+
+                {{#each pagination.pages}}
+                    {{#if isEllipsis}}
+                        <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
+                    {{else if isCurrent}}
+                        <span class="pagination-current">{{number}}</span>
+                    {{else}}
+                        <a href="{{url}}" class="pagination-item">{{number}}</a>
+                    {{/if}}
+                {{/each}}
+
+                {{#if pagination.hasNext}}
+                    <a href="{{pagination.nextUrl}}" class="pagination-item">{{t 'pagination.next'}} &raquo;</a>
+                {{/if}}
+            </div>
+        {{/if}}
     </main>
 {{/layout}}

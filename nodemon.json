@@ -1,0 +1,19 @@
+{
+  "watch": [
+    "server.js",
+    "build.js",
+    "page-generator.js",
+    "markdown-parser.js",
+    "config.js",
+    "templates",
+    "pages",
+    "styles",
+    "static"
+  ],
+  "ignore": [
+    "public",
+    "node_modules",
+    ".git"
+  ],
+  "ext": "js,json,html,hbs,md,css,svg,png,jpg,jpeg,webp"
+}

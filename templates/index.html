@@ -44,7 +44,9 @@
                 {{/if}}
 
                 {{#each pagination.pages}}
-                    {{#if isCurrent}}
+                    {{#if isEllipsis}}
+                        <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
+                    {{else if isCurrent}}
                         <span class="pagination-current">{{number}}</span>
                     {{else}}
                         <a href="{{url}}" class="pagination-item">{{number}}</a>

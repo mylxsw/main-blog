@@ -2154,6 +2154,7 @@ body.theme-dark .article-content table tbody tr:nth-child(even) td {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.65rem;
   margin-top: 3.2rem;
 }
@@ -2187,6 +2188,12 @@ body.theme-dark .article-content table tbody tr:nth-child(even) td {
   color: white;
   border-radius: 0.75rem;
   box-shadow: 0 18px 35px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.pagination-ellipsis {
+  padding: 0.55rem 0.35rem;
+  color: var(--color-muted);
+  user-select: none;
 }
 
 /* 页脚 */

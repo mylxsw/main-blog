@@ -478,29 +478,65 @@ class PageGenerator {
         };
     }
 
-    buildPagination(currentPage, totalPages, language) {
-        const pages = [];
-        for (let page = 1; page <= totalPages; page++) {
-            const url = page === 1
-                ? this.buildLanguageUrl(language, [], { trailingSlash: true })
-                : this.buildLanguageUrl(language, ['page', String(page)], { trailingSlash: true });
-            pages.push({
-                number: page,
-                url,
-                isCurrent: page === currentPage
-            });
+    buildPagination(currentPage, totalPages, language, options = {}) {
+        const baseSegments = options.baseSegments || [];
+        const pagePrefixSegments = options.pagePrefixSegments || ['page'];
+        const configuredMaxVisible = Number(this.config.pagination?.maxVisiblePages);
+        const maxVisiblePages = Number.isFinite(configuredMaxVisible)
+            ? Math.max(7, Math.floor(configuredMaxVisible))
+            : 11;
+        const pageUrl = (page) => (
+            page === 1
+                ? this.buildLanguageUrl(language, baseSegments, { trailingSlash: true })
+                : this.buildLanguageUrl(language, [baseSegments, pagePrefixSegments, String(page)], { trailingSlash: true })
+        );
+
+        const pageItem = (page) => ({
+            number: page,
+            url: pageUrl(page),
+            isCurrent: page === currentPage
+        });
+        const ellipsisItem = (key) => ({
+            key,
+            isEllipsis: true
+        });
+
+        let pages = [];
+        if (totalPages <= maxVisiblePages) {
+            for (let page = 1; page <= totalPages; page++) {
+                pages.push(pageItem(page));
+            }
+        } else if (currentPage <= maxVisiblePages - 4) {
+            const endPage = maxVisiblePages - 2;
+            for (let page = 1; page <= endPage; page++) {
+                pages.push(pageItem(page));
+            }
+            pages.push(ellipsisItem('end'));
+            pages.push(pageItem(totalPages));
+        } else if (currentPage >= totalPages - (maxVisiblePages - 5)) {
+            const startPage = totalPages - (maxVisiblePages - 3);
+            pages.push(pageItem(1));
+            pages.push(ellipsisItem('start'));
+            for (let page = startPage; page <= totalPages; page++) {
+                pages.push(pageItem(page));
+            }
+        } else {
+            const windowSize = maxVisiblePages - 4;
+            const startPage = currentPage - Math.floor(windowSize / 2);
+            const endPage = startPage + windowSize - 1;
+            pages.push(pageItem(1));
+            pages.push(ellipsisItem('start'));
+            for (let page = startPage; page <= endPage; page++) {
+                pages.push(pageItem(page));
+            }
+            pages.push(ellipsisItem('end'));
+            pages.push(pageItem(totalPages));
         }
 
         const hasPrev = currentPage > 1;
         const hasNext = currentPage < totalPages;
-        const prevUrl = hasPrev
-            ? (currentPage - 1 === 1
-                ? this.buildLanguageUrl(language, [], { trailingSlash: true })
-                : this.buildLanguageUrl(language, ['page', String(currentPage - 1)], { trailingSlash: true }))
-            : '';
-        const nextUrl = hasNext
-            ? this.buildLanguageUrl(language, ['page', String(currentPage + 1)], { trailingSlash: true })
-            : '';
+        const prevUrl = hasPrev ? pageUrl(currentPage - 1) : '';
+        const nextUrl = hasNext ? pageUrl(currentPage + 1) : '';
 
         return {
             currentPage,
@@ -595,6 +631,27 @@ class PageGenerator {
         if (!value) return '';
         if (typeof value !== 'string') return '';
         return value.trim();
+    }
+
+    normalizeCategoryList(values) {
+        if (!values) return [];
+        const list = Array.isArray(values) ? values : [values];
+        return list
+            .map(value => this.normalizeCategory(value))
+            .filter(Boolean);
+    }
+
+    getHomeVisiblePosts(posts) {
+        const excludedCategories = this.normalizeCategoryList(this.config.home?.excludeCategories);
+        if (!excludedCategories.length) return posts;
+
+        const excludedNames = new Set(excludedCategories);
+        const excludedSlugs = new Set(excludedCategories.map(category => this.slugify(category)));
+        return posts.filter(post => {
+            const category = this.normalizeCategory(post.attributes?.category);
+            if (!category) return true;
+            return !excludedNames.has(category) && !excludedSlugs.has(this.slugify(category));
+        });
     }
 
     normalizeSeoKeywords(value) {
@@ -969,7 +1026,7 @@ class PageGenerator {
         this.writeHtml(outputPath, template(data));
     }
 
-    generateListingPage({ title, heading, posts, outputPath, navigation, availableTags, language, canonicalUrl = '' }) {
+    generateListingPage({ title, heading, posts, outputPath, navigation, availableTags, language, canonicalUrl = '', pagination = null }) {
         const template = compile(this.getTemplate('listing.html'));
         const baseData = this.createBaseTemplateData(language, navigation, availableTags);
         const data = {
@@ -978,10 +1035,19 @@ class PageGenerator {
             heading,
             posts,
             hasPosts: Array.isArray(posts) && posts.length > 0,
+            pagination,
+            hasPagination: Boolean(pagination && pagination.totalPages > 1),
             canonicalUrl,
             ogType: 'website'
         };
         this.writeHtml(outputPath, template(data));
+    }
+
+    cleanupHomePagination(language) {
+        const paginationDir = this.buildLanguageOutputPath(language, 'page');
+        if (fs.existsSync(paginationDir)) {
+            fs.removeSync(paginationDir);
+        }
     }
 
     generateTagPages(tags, posts, categories, allTags, language) {
@@ -1026,20 +1092,36 @@ class PageGenerator {
                 type: 'category',
                 backgroundImage: category.backgroundImage || ''
             };
-            const outputPath = this.buildLanguageOutputPath(language, ['categories', category.slug, 'index.html']);
             const navigation = this.buildNavigation(categories, language, { activeCategorySlug: category.slug });
 
             const titleSuffix = this.translate(language, 'categories.pageTitleSuffix', 'Categories');
-            this.generateListingPage({
-                title: `${category.name} · ${titleSuffix} · ${this.config.site.title}`,
-                heading,
-                posts: categoryPosts.map(post => this.buildListingItem(post, language)),
-                outputPath,
-                navigation,
-                availableTags,
-                language,
-                canonicalUrl: this.getSiteUrl(language, ['categories', category.slug], { trailingSlash: true })
-            });
+            const pageSize = this.config.pagination.pageSize || 5;
+            const totalPages = Math.max(1, Math.ceil(categoryPosts.length / pageSize));
+
+            for (let page = 1; page <= totalPages; page++) {
+                const startIndex = (page - 1) * pageSize;
+                const pagePosts = categoryPosts.slice(startIndex, startIndex + pageSize);
+                const outputPath = page === 1
+                    ? this.buildLanguageOutputPath(language, ['categories', category.slug, 'index.html'])
+                    : this.buildLanguageOutputPath(language, ['categories', category.slug, 'page', String(page), 'index.html']);
+                const canonicalSegments = page === 1
+                    ? ['categories', category.slug]
+                    : ['categories', category.slug, 'page', String(page)];
+
+                this.generateListingPage({
+                    title: `${category.name} · ${titleSuffix} · ${this.config.site.title}`,
+                    heading,
+                    posts: pagePosts.map(post => this.buildListingItem(post, language)),
+                    outputPath,
+                    navigation,
+                    availableTags,
+                    language,
+                    canonicalUrl: this.getSiteUrl(language, canonicalSegments, { trailingSlash: true }),
+                    pagination: this.buildPagination(page, totalPages, language, {
+                        baseSegments: ['categories', category.slug]
+                    })
+                });
+            }
         });
     }
 
@@ -1182,6 +1264,18 @@ class PageGenerator {
                 changefreq,
                 priority: defaultPriority
             });
+
+            const pageSize = this.config.pagination.pageSize || 5;
+            const categoryTotalPages = Math.max(1, Math.ceil((category.count || 0) / pageSize));
+            for (let page = 2; page <= categoryTotalPages; page++) {
+                const categoryPagePath = this.buildLanguageUrl(language, ['categories', category.slug, 'page', String(page)], { trailingSlash: true });
+                urls.push({
+                    loc: `${siteUrl}${categoryPagePath}`,
+                    lastmod: today,
+                    changefreq,
+                    priority: defaultPriority
+                });
+            }
         });
 
         tags.forEach(tag => {
@@ -1333,7 +1427,8 @@ class PageGenerator {
             const categories = this.collectCategories(posts, language);
             const availableTags = this.collectTags(posts, language);
             const pageSize = this.config.pagination.pageSize || 5;
-            const totalPosts = posts.length;
+            const homePosts = this.getHomeVisiblePosts(posts);
+            const totalPosts = homePosts.length;
             const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
 
             posts.forEach(post => {
@@ -1344,8 +1439,9 @@ class PageGenerator {
                 this.generateSystemPage(page, categories, availableTags, language);
             });
 
+            this.cleanupHomePagination(language);
             for (let pageIndex = 1; pageIndex <= totalPages; pageIndex++) {
-                this.generateIndex(posts, pageIndex, pageSize, availableTags, categories, language);
+                this.generateIndex(homePosts, pageIndex, pageSize, availableTags, categories, language);
             }
 
             this.generateTagPages(availableTags, posts, categories, availableTags, language);
