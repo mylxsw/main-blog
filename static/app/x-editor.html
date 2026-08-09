@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>X (Twitter) Editor</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg-color: #f8f9fa;
+                --text-color: #333;
+                --panel-bg: white;
+                --border-color: #e0e0e0;
+                --modal-bg: white;
+                --modal-text: #333;
+                --modal-overlay: rgba(0, 0, 0, 0.5);
+                --accent-color: #1d9bf0;
+                --accent-hover: #1a8cd8;
+                --danger-color: #f4212e;
+                --char-warning: #ffd400;
+                --char-over: #f4212e;
+            }
+
+            [data-theme="dark"] {
+                --bg-color: #15202b;
+                --text-color: #e7e9ea;
+                --panel-bg: #192734;
+                --border-color: #38444d;
+                --modal-bg: #192734;
+                --modal-text: #e7e9ea;
+                --modal-overlay: rgba(0, 0, 0, 0.7);
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    "Helvetica Neue", sans-serif;
+                line-height: 1.6;
+                color: var(--text-color);
+                background-color: var(--bg-color);
+                transition:
+                    background-color 0.3s,
+                    color 0.3s;
+                display: flex;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 600px;
+            }
+
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .header h1 svg {
+                width: 24px;
+                height: 24px;
+                fill: var(--text-color);
+            }
+
+            .editor-panel {
+                background: var(--panel-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 16px;
+                transition:
+                    background-color 0.3s,
+                    border-color 0.3s;
+            }
+
+            #tweetText {
+                width: 100%;
+                min-height: 150px;
+                max-height: calc(100vh - 200px);
+                border: none;
+                outline: none;
+                resize: none;
+                overflow-y: auto;
+                font-size: 18px;
+                line-height: 1.5;
+                color: var(--text-color);
+                background: transparent;
+                font-family: inherit;
+            }
+
+            #tweetText::placeholder {
+                color: #71767b;
+            }
+
+            .editor-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .char-count {
+                font-size: 14px;
+                color: #71767b;
+            }
+
+            .char-count.warning {
+                color: var(--char-warning);
+            }
+
+            .char-count.over {
+                color: var(--char-over);
+                font-weight: bold;
+            }
+
+            .footer-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .btn-action {
+                border: none;
+                border-radius: 9999px;
+                padding: 8px 16px;
+                font-size: 14px;
+                font-weight: 700;
+                cursor: pointer;
+                transition:
+                    background-color 0.2s,
+                    opacity 0.2s;
+            }
+
+            .btn-action:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .btn-copy {
+                background-color: var(--border-color);
+                color: var(--text-color);
+            }
+
+            .btn-copy:hover:not(:disabled) {
+                opacity: 0.8;
+            }
+
+            .btn-direct {
+                background-color: #00ba7c;
+                color: white;
+            }
+
+            .btn-direct:hover:not(:disabled) {
+                background-color: #009966;
+            }
+
+            .btn-post {
+                background-color: var(--accent-color);
+                color: white;
+            }
+
+            .btn-post:hover:not(:disabled) {
+                background-color: var(--accent-hover);
+            }
+
+            .btn-theme {
+                background: none;
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                cursor: pointer;
+                font-size: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--text-color);
+                transition: background-color 0.2s;
+            }
+
+            .btn-theme:hover {
+                background-color: var(--border-color);
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--modal-overlay);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal.show {
+                display: flex;
+            }
+
+            .modal-content {
+                background: var(--modal-bg);
+                color: var(--modal-text);
+                border-radius: 16px;
+                padding: 24px;
+                max-width: 400px;
+                width: 90%;
+                text-align: center;
+            }
+
+            .modal-content h2 {
+                margin-bottom: 8px;
+                font-size: 18px;
+            }
+
+            .modal-content p {
+                margin-bottom: 8px;
+                color: #71767b;
+                font-size: 14px;
+            }
+
+            .modal-preview {
+                background: var(--bg-color);
+                border-radius: 8px;
+                padding: 12px;
+                margin: 16px 0;
+                text-align: left;
+                font-size: 15px;
+                white-space: pre-wrap;
+                word-break: break-word;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .modal-buttons {
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                margin-top: 16px;
+            }
+
+            .modal-btn {
+                border: none;
+                border-radius: 9999px;
+                padding: 8px 24px;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .modal-btn.confirm {
+                background-color: var(--accent-color);
+                color: white;
+            }
+
+            .modal-btn.confirm:hover {
+                background-color: var(--accent-hover);
+            }
+
+            .modal-btn.cancel {
+                background-color: var(--border-color);
+                color: var(--text-color);
+            }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-100px);
+                padding: 12px 24px;
+                border-radius: 8px;
+                background-color: #00ba7c;
+                color: white;
+                font-weight: 600;
+                z-index: 2000;
+                transition: transform 0.3s ease;
+            }
+
+            .notification.error {
+                background-color: var(--danger-color);
+            }
+
+            .notification.show {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            .loading-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--modal-overlay);
+                z-index: 3000;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .loading-spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .history-section {
+                margin-top: 24px;
+            }
+
+            .history-section h3 {
+                font-size: 16px;
+                margin-bottom: 8px;
+                color: #71767b;
+            }
+
+            .history-item {
+                background: var(--panel-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 12px;
+                margin-bottom: 8px;
+                font-size: 14px;
+                white-space: pre-wrap;
+                word-break: break-word;
+                transition:
+                    background-color 0.3s,
+                    border-color 0.3s;
+            }
+
+            .history-item .time {
+                font-size: 12px;
+                color: #71767b;
+                margin-top: 6px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                        />
+                    </svg>
+                    Post Editor
+                </h1>
+                <button class="btn-theme" id="themeToggle" title="切换主题">
+                    🌙
+                </button>
+            </div>
+
+            <div class="editor-panel">
+                <textarea
+                    id="tweetText"
+                    placeholder="有什么新鲜事？"
+                ></textarea>
+                <div class="editor-footer">
+                    <span class="char-count" id="charCount">0</span>
+                    <div class="footer-actions">
+                        <button
+                            class="btn-action btn-copy"
+                            id="copyBtn"
+                            disabled
+                        >
+                            复制
+                        </button>
+                        <button
+                            class="btn-action btn-direct"
+                            id="directBtn"
+                            disabled
+                        >
+                            直接发布
+                        </button>
+                        <button
+                            class="btn-action btn-post"
+                            id="postBtn"
+                            disabled
+                        >
+                            API 发布
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="history-section"
+                id="historySection"
+                style="display: none"
+            >
+                <h3>发送历史</h3>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="confirmModal">
+            <div class="modal-content">
+                <h2>确认发布到 X</h2>
+                <p>请选择发布选项：</p>
+                <div style="text-align: left; margin: 16px 0">
+                    <label
+                        style="
+                            display: block;
+                            margin-bottom: 8px;
+                            font-size: 14px;
+                            color: var(--modal-text);
+                        "
+                        >发布账号</label
+                    >
+                    <select
+                        id="accountSelect"
+                        style="
+                            width: 100%;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            border: 1px solid #71767b;
+                            background: var(--bg-color);
+                            color: var(--text-color);
+                            font-size: 14px;
+                        "
+                    ></select>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="modal-btn confirm" id="confirmPost">
+                        确认发布
+                    </button>
+                    <button class="modal-btn cancel" id="cancelPost">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification" id="notification"></div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <script>
+            // 账号列表，由外部写入
+            const X_ACCOUNTS = ["mylxsw", "realedgelab"];
+
+            const tweetText = document.getElementById("tweetText");
+            const charCount = document.getElementById("charCount");
+            const copyBtn = document.getElementById("copyBtn");
+            const directBtn = document.getElementById("directBtn");
+            const postBtn = document.getElementById("postBtn");
+            const confirmModal = document.getElementById("confirmModal");
+            const accountSelect = document.getElementById("accountSelect");
+            const confirmPost = document.getElementById("confirmPost");
+            const cancelPost = document.getElementById("cancelPost");
+            const notification = document.getElementById("notification");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+            const historySection = document.getElementById("historySection");
+            const historyList = document.getElementById("historyList");
+            const themeToggle = document.getElementById("themeToggle");
+
+            const MAX_CHARS = 280;
+
+            function getUrlParameter(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name) || "";
+            }
+
+            const API_URL =
+                getUrlParameter("api-url") ||
+                "https://n8n.fallout.in/webhook/16a20991-69df-4ab9-af9e-3bb17729867e";
+            const API_TOKEN =
+                "Bearer " + (getUrlParameter("x-auth-key") || "your api token");
+
+            // Theme
+            const savedTheme = localStorage.getItem("x-editor-theme");
+            const prefersDark = window.matchMedia(
+                "(prefers-color-scheme: dark)",
+            ).matches;
+            if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+                document.documentElement.setAttribute("data-theme", "dark");
+                themeToggle.textContent = "☀️";
+            }
+
+            themeToggle.addEventListener("click", () => {
+                const isDark =
+                    document.documentElement.getAttribute("data-theme") ===
+                    "dark";
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    isDark ? "light" : "dark",
+                );
+                themeToggle.textContent = isDark ? "🌙" : "☀️";
+                localStorage.setItem(
+                    "x-editor-theme",
+                    isDark ? "light" : "dark",
+                );
+            });
+
+            // Auto-resize textarea
+            function autoResize() {
+                tweetText.style.height = "auto";
+                tweetText.style.height = tweetText.scrollHeight + "px";
+            }
+
+            // Char count & button state
+            tweetText.addEventListener("input", () => {
+                autoResize();
+                const len = tweetText.value.length;
+                charCount.textContent = len;
+                charCount.className =
+                    "char-count" +
+                    (len > MAX_CHARS ? " over" : len > 260 ? " warning" : "");
+                const isDisabled = len === 0;
+                copyBtn.disabled = isDisabled;
+                directBtn.disabled = isDisabled;
+                postBtn.disabled = isDisabled;
+            });
+
+            // Button Actions
+            copyBtn.addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(tweetText.value);
+                    showNotification("内容已复制到剪贴板", false);
+                } catch (err) {
+                    showNotification("复制失败: " + err.message, true);
+                }
+            });
+
+            directBtn.addEventListener("click", () => {
+                const text = encodeURIComponent(tweetText.value);
+                window.open(
+                    `https://x.com/intent/tweet?text=${text}`,
+                    "_blank",
+                );
+            });
+
+            // Populate account dropdown
+            X_ACCOUNTS.forEach((acc) => {
+                const opt = document.createElement("option");
+                opt.value = acc;
+                opt.textContent = acc;
+                accountSelect.appendChild(opt);
+            });
+
+            // Post flow
+            postBtn.addEventListener("click", () => {
+                confirmModal.classList.add("show");
+            });
+
+            cancelPost.addEventListener("click", () => {
+                confirmModal.classList.remove("show");
+            });
+
+            confirmModal.addEventListener("click", (e) => {
+                if (e.target === confirmModal)
+                    confirmModal.classList.remove("show");
+            });
+
+            confirmPost.addEventListener("click", async () => {
+                confirmModal.classList.remove("show");
+                loadingOverlay.style.display = "flex";
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: "POST",
+                        headers: {
+                            Authorization: API_TOKEN,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            text: tweetText.value,
+                            username: accountSelect.value,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || `HTTP ${response.status}`);
+                    }
+
+                    addHistory(tweetText.value);
+                    tweetText.value = "";
+                    tweetText.dispatchEvent(new Event("input"));
+                    showNotification("发布成功！", false);
+                } catch (err) {
+                    showNotification("发布失败: " + err.message, true);
+                } finally {
+                    loadingOverlay.style.display = "none";
+                }
+            });
+
+            // Notification
+            function showNotification(msg, isError) {
+                notification.textContent = msg;
+                notification.className =
+                    "notification" + (isError ? " error" : "");
+                requestAnimationFrame(() => notification.classList.add("show"));
+                setTimeout(() => notification.classList.remove("show"), 3000);
+            }
+
+            // History
+            function addHistory(text) {
+                const history = JSON.parse(
+                    localStorage.getItem("x-editor-history") || "[]",
+                );
+                history.unshift({ text, time: new Date().toLocaleString() });
+                if (history.length > 20) history.length = 20;
+                localStorage.setItem(
+                    "x-editor-history",
+                    JSON.stringify(history),
+                );
+                renderHistory();
+            }
+
+            function renderHistory() {
+                const history = JSON.parse(
+                    localStorage.getItem("x-editor-history") || "[]",
+                );
+                if (history.length === 0) {
+                    historySection.style.display = "none";
+                    return;
+                }
+                historySection.style.display = "block";
+                historyList.innerHTML = history
+                    .map(
+                        (h) =>
+                            `<div class="history-item">${escapeHtml(h.text)}<div class="time">${escapeHtml(h.time)}</div></div>`,
+                    )
+                    .join("");
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement("div");
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // Keyboard shortcut: Ctrl/Cmd + Enter to post
+            tweetText.addEventListener("keydown", (e) => {
+                if (
+                    (e.ctrlKey || e.metaKey) &&
+                    e.key === "Enter" &&
+                    !postBtn.disabled
+                ) {
+                    postBtn.click();
+                }
+            });
+
+            renderHistory();
+
+            // Load initial content from API if ?api= parameter is provided
+            (async () => {
+                const params = new URLSearchParams(window.location.search);
+                const apiUrl = params.get("api");
+                if (!apiUrl) return;
+                loadingOverlay.style.display = "flex";
+                try {
+                    const resp = await fetch(apiUrl);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    if (data.text) {
+                        tweetText.value = data.text;
+                        tweetText.dispatchEvent(new Event("input"));
+                    }
+                } catch (err) {
+                    showNotification("加载初始内容失败: " + err.message, true);
+                } finally {
+                    loadingOverlay.style.display = "none";
+                }
+            })();
+        </script>
+    </body>
+</html>
